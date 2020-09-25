@@ -15,7 +15,9 @@ using Microsoft.VisualStudio.Text.Projection;
 
 namespace CSharpOutline2019
 {
-    //Need to disable built-in outlining of Visual Studio. Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck 'Show outlining of declaration level constructs' and 'Show outlining of code level constructs'
+    /// <summary>
+    /// Need to disable built-in outlining of Visual Studio. Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck 'Show outlining of declaration level constructs' and 'Show outlining of code level constructs'
+    /// </summary>
     class CSharpOutliningTagger : ITagger<IOutliningRegionTag>, IDisposable
     {
         //Add some fields to track the text buffer and snapshot and to accumulate the sets of lines that should be tagged as outlining regions. 
@@ -25,7 +27,6 @@ namespace CSharpOutline2019
         private List<TextRegion> Regions = new List<TextRegion>();
         private IClassifier Classifier;
         private IEditorOptions EditorOptions;
-        private DispatcherTimer UpdateTimer;
         public int TabSize { get; set; }
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -41,14 +42,6 @@ namespace CSharpOutline2019
             this.TabSize = editorOptions.GetTabSize();
             //this.Classifier.ClassificationChanged += BufferChanged;			
 
-            //timer that will trigger outlining update after some period of no buffer changes
-            UpdateTimer = new DispatcherTimer(DispatcherPriority.ApplicationIdle);
-            UpdateTimer.Interval = TimeSpan.FromMilliseconds(2500);
-            UpdateTimer.Tick += (sender, args) =>
-            {
-                UpdateTimer.Stop();
-                this.Outline();
-            };
             this.Outline(); // Force an initial full parse			
         }
 
@@ -77,9 +70,9 @@ namespace CSharpOutline2019
         //Add a BufferChanged event handler that responds to Changed events by parsing the text buffer.
         private void BufferChanged(object sender, TextContentChangedEventArgs e)
         {
-            // reset timer accumulation
-            UpdateTimer.Stop();
-            UpdateTimer.Start();
+            if (e.After != Buffer.CurrentSnapshot)
+                return;
+            this.Outline();
         }
 
         //Add a method that parses the buffer. The example given here is for illustration only. 
@@ -151,7 +144,6 @@ namespace CSharpOutline2019
 
         public void Dispose()
         {
-            UpdateTimer.Stop();
             Buffer.Changed -= BufferChanged;
         }
 
