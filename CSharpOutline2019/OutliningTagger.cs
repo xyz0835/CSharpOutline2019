@@ -1,45 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text.Outlining;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Windows.Threading;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
+using System.Windows.Media;
 
 namespace CSharpOutline2019
 {
-    //Need to disable built-in outlining of Visual Studio. Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck 'Show outlining of declaration level constructs' and 'Show outlining of code level constructs'
+    /// <summary>
+    /// Need to disable built-in outlining of Visual Studio. Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck 'Show outlining of declaration level constructs' and 'Show outlining of code level constructs'
+    /// </summary>
     class CSharpOutliningTagger : ITagger<IOutliningRegionTag>, IDisposable
     {
         //Add some fields to track the text buffer and snapshot and to accumulate the sets of lines that should be tagged as outlining regions. 
         //This code includes a list of Region objects (to be defined later) that represent the outlining regions.		
-        private ITextBuffer Buffer;
-        private ITextSnapshot Snapshot;
-        private List<TextRegion> Regions = new List<TextRegion>();
-        private IClassifier Classifier;
-        private IEditorOptions EditorOptions;
-        private DispatcherTimer UpdateTimer;
-        public int TabSize { get; set; }
-
+        public ITextBuffer Buffer;
+        ITextSnapshot Snapshot;
+        List<TextRegion> Regions = new List<TextRegion>();
+        IClassifier Classifier;
+        public ITextEditorFactoryService EditorFactory;
+        public IProjectionBufferFactoryService BufferFactory = null;
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
+        private DispatcherTimer UpdateTimer;
 
-        public CSharpOutliningTagger(ITextBuffer buffer, IClassifier classifier, IEditorOptions editorOptions)
+        public CSharpOutliningTagger(ITextBuffer buffer, IClassifier classifier, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
         {
             this.Buffer = buffer;
             this.Snapshot = buffer.CurrentSnapshot;
             this.Classifier = classifier;
             this.Buffer.Changed += BufferChanged;
-            this.EditorOptions = editorOptions;
             // need Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods namespace to work
-            this.TabSize = editorOptions.GetTabSize();
             //this.Classifier.ClassificationChanged += BufferChanged;			
+            this.EditorFactory = editorFactory;
+            this.BufferFactory = bufferFactory;
 
             //timer that will trigger outlining update after some period of no buffer changes
             UpdateTimer = new DispatcherTimer(DispatcherPriority.ApplicationIdle);
@@ -49,13 +47,18 @@ namespace CSharpOutline2019
                 UpdateTimer.Stop();
                 this.Outline();
             };
+
+            //timer that will trigger outlining update after some period of no buffer changes     
             this.Outline(); // Force an initial full parse			
         }
 
-
-        //Implement the GetTags method, which instantiates the tag spans. 
-        //This example assumes that the spans in the NormalizedSpanCollection passed in to the method are contiguous, although this may not always be the case. 
-        //This method instantiates a new tag span for each of the outlining regions.
+        /// <summary>
+        /// Implement the GetTags method, which instantiates the tag spans. 
+        /// This example assumes that the spans in the NormalizedSpanCollection passed in to the method are contiguous, although this may not always be the case. 
+        /// This method instantiates a new tag span for each of the outlining regions.
+        /// </summary>
+        /// <param name="spans"></param>
+        /// <returns></returns>
         public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
             if (spans.Count == 0)
@@ -74,16 +77,21 @@ namespace CSharpOutline2019
             }
         }
 
-        //Add a BufferChanged event handler that responds to Changed events by parsing the text buffer.
+        /// <summary>
+        /// Add a BufferChanged event handler that responds to Changed events by parsing the text buffer.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void BufferChanged(object sender, TextContentChangedEventArgs e)
         {
-            // reset timer accumulation
             UpdateTimer.Stop();
             UpdateTimer.Start();
         }
 
-        //Add a method that parses the buffer. The example given here is for illustration only. 
-        //It synchronously parses the buffer into nested outlining regions.
+        /// <summary>
+        /// Add a method that parses the buffer. The example given here is for illustration only. 
+        /// It synchronously parses the buffer into nested outlining regions.
+        /// </summary>
         private void Outline()
         {
             ITextSnapshot snapshot = Buffer.CurrentSnapshot;
@@ -124,8 +132,7 @@ namespace CSharpOutline2019
 
             if (changeStart <= changeEnd && this.TagsChanged != null)
             {
-                this.TagsChanged(this, new SnapshotSpanEventArgs(
-                        new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
+                this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
             }
         }
 
@@ -165,8 +172,9 @@ namespace CSharpOutline2019
     {
         private ITextSnapshot Snapshot;
         public SnapshotPoint CurrentPoint { get; private set; }
-        //public ITextSnapshotLine CurrentLine { get { return CurrentPoint.GetContainingLine(); } }
-        //classifier
+        /// <summary>
+        /// classifier
+        /// </summary>
         private IClassifier Classifier;
         private IList<ClassificationSpan> ClassificationSpans;
         /// <summary>
@@ -246,40 +254,32 @@ namespace CSharpOutline2019
         /// <summary>
         /// whether region has endpoint
         /// </summary>
-        public bool Complete
-        {
-            get { return EndPoint.Snapshot != null; }
-        }
-        public ITextSnapshotLine StartLine { get { return StartPoint.GetContainingLine(); } }
-        public ITextSnapshotLine EndLine { get { return EndPoint.GetContainingLine(); } }
+        public bool Complete => EndPoint.Snapshot != null;
+
+        public ITextSnapshotLine StartLine => StartPoint.GetContainingLine();
+        public ITextSnapshotLine EndLine => EndPoint.GetContainingLine();
         public TextRegionType RegionType { get; private set; }
         public string Name { get; set; }
 
         public TextRegion Parent { get; set; }
         public List<TextRegion> Children { get; set; }
 
-        public string InnerText
-        {
-            get { return StartPoint.Snapshot.GetText(StartPoint.Position, EndPoint.Position - StartPoint.Position + 1); }
-        }
+        public string InnerText => StartPoint.Snapshot.GetText(StartPoint.Position, EndPoint.Position - StartPoint.Position + 1);
+
         #endregion
 
         #region Constructors
         /// <summary>
         /// text from first line start to region start
         /// </summary>
-        public string TextBefore
-        {
-            get { return StartLine.GetText().Substring(0, StartPoint - StartLine.Start); }
-        }
+        public string TextBefore => StartLine.GetText().Substring(0, StartPoint - StartLine.Start);
 
         public TextRegion()
         {
             Children = new List<TextRegion>();
         }
 
-        public TextRegion(SnapshotPoint startPoint, TextRegionType type)
-            : this()
+        public TextRegion(SnapshotPoint startPoint, TextRegionType type) : this()
         {
             StartPoint = startPoint;
             RegionType = type;
@@ -289,53 +289,106 @@ namespace CSharpOutline2019
         public TagSpan<IOutliningRegionTag> AsOutliningRegionTag()
         {
             SnapshotSpan span = this.AsSnapshotSpan();
-            string hoverText = span.GetText();
-            // removing first empty line
-            string[] lines = hoverText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            return new TagSpan<IOutliningRegionTag>(span, new OutliningRegionTag(false, false, "...", GetCollapsedControl()));
+        }
 
-            string tabSpaces = new string(' ', Tagger.TabSize);
+        public ViewHostingControl GetCollapsedControl()
+        {
+            ViewHostingControl viewHostingControl = null;
+            var projectionBuffer = Tagger.BufferFactory.CreateProjectionBuffer(null, ToCollapsedObjects(), ProjectionBufferOptions.WritableLiteralSpans);
+            viewHostingControl = new ViewHostingControl((tb) => CreateTextView(Tagger.EditorFactory, projectionBuffer), () => projectionBuffer);
+            return viewHostingControl;
+        }
 
-            int empty = 0;
-            while (empty < lines.Length && string.IsNullOrWhiteSpace(lines[empty]))
-                empty++;
-
-            string[] textLines = new string[Math.Min(lines.Length - empty, 25)];
-            for (int i = 0; i < textLines.Length; i++)
-                textLines[i] = lines[i + empty].Replace("\t", tabSpaces);
-
-            //removing redundant indentation
-            //calculating minimal indentation
-            int minIndent = int.MaxValue;
-            foreach (string s in textLines)
-                minIndent = Math.Min(minIndent, GetIndentation(s));
-
-            // allocating a bit larger buffer
-            StringBuilder builder = new StringBuilder(hoverText.Length);
-
-            for (int i = 0; i < textLines.Length - 1; i++)
+        /// <summary>
+        ///  To hover content
+        /// </summary>
+        /// <returns></returns>
+        private List<object> ToCollapsedObjects()
+        {
+            var currentsnapshot = Tagger.Buffer.CurrentSnapshot;
+            var sourceSpans = new List<object>();
+            //start from second line
+            var currentLine = currentsnapshot.GetLineFromLineNumber(this.StartLine.LineNumber + 1);
+            int totallengh = this.EndPoint.Position - currentLine.Start.Position;
+            if (totallengh < 1)
             {
-                // unindenting every line
-                builder.AppendLine(textLines[i].Length > minIndent ? textLines[i].Substring(minIndent) : "");
+                return sourceSpans;
+            }
+            int maxcount = 40;
+#if DEBUG
+            sourceSpans.Add("[Debug Mode]: Tooltip from CSharpOutline2019\r\n\r\n");
+            maxcount = 43; //three lines added in debug mode
+#endif
+
+            int emptyCount = -1;
+            Span linespan;
+            while (true)
+            {
+                if (emptyCount == -1)
+                {
+                    emptyCount = currentLine.GetStartEmptyCount(currentsnapshot);
+                }
+
+                if (emptyCount > -1)
+                {
+                    if (!string.IsNullOrEmpty(currentLine.GetText()))
+                    {
+                        int currentEmptyCount = currentLine.GetStartEmptyCount(currentsnapshot);
+                        if (currentEmptyCount > emptyCount)
+                            currentEmptyCount = emptyCount;
+                        //remove empty space in the front
+                        linespan = new Span(currentLine.Start + currentEmptyCount, currentLine.LengthIncludingLineBreak - currentEmptyCount);
+                        sourceSpans.Add(currentsnapshot.CreateTrackingSpan(linespan, SpanTrackingMode.EdgeExclusive));
+                    }
+                    else
+                    {
+                        //empty line
+                        sourceSpans.Add(Environment.NewLine);
+                    }
+
+                    currentLine = currentsnapshot.GetLineFromLineNumber(currentLine.LineNumber + 1);
+
+                    if (currentLine.Start >= this.EndLine.Start)
+                    {
+                        sourceSpans.Add("}");
+                        break;
+                    }
+
+                    //stop when more than 40 lines in hover content
+                    if (sourceSpans.Count > maxcount)
+                    {
+                        sourceSpans.Add(Environment.NewLine);
+                        sourceSpans.Add("...");
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
             }
 
-            // using Append() instead of AppendLine() to prevent extra newline
-            if (textLines.Length == lines.Length - empty)
-                builder.Append(textLines[textLines.Length - 1].Length > minIndent ? textLines[textLines.Length - 1].Substring(minIndent) : "");
-            else
-                builder.Append("...");
-
-            return new TagSpan<IOutliningRegionTag>(span, new OutliningRegionTag(false, false, GetCollapsedText(), builder.ToString()));
-            //return new TagSpan<IOutliningRegionTag>(span, new OutliningRegionTag(false, false, GetCollapsedText(), hoverText));
+            return sourceSpans;
         }
+
+
+        internal static IWpfTextView CreateTextView(ITextEditorFactoryService textEditorFactoryService, ITextBuffer finalBuffer)
+        {
+            var roles = textEditorFactoryService.CreateTextViewRoleSet("OutliningRegionTextViewRole");
+            var view = textEditorFactoryService.CreateTextView(finalBuffer, roles);
+
+            view.Background = Brushes.Transparent;
+            view.SizeToFit();
+            // Zoom out a bit to shrink the text.
+            view.ZoomLevel *= 0.83;
+            return view;
+        }
+
 
         public SnapshotSpan AsSnapshotSpan()
         {
             return new SnapshotSpan(this.StartPoint, this.EndPoint);
-        }
-
-        private string GetCollapsedText()
-        {
-            return "...";
         }
 
         /// <summary>
@@ -390,7 +443,7 @@ namespace CSharpOutline2019
         {
             for (; !parser.AtEnd(); parser.MoveNext())
             {
-                TextRegion r = TextRegion.TryCreateRegion(parser);
+                TextRegion r = TryCreateRegion(parser);
 
                 if (r != null)
                 {
@@ -399,7 +452,7 @@ namespace CSharpOutline2019
                     if (!r.Complete)
                     {
                         //searching for child regions						
-                        while (TextRegion.ParseBuffer(parser, r) != null) ;
+                        while (ParseBuffer(parser, r) != null) ;
                         //found everything						
                         r.ExtendStartPoint();
                     }
@@ -430,9 +483,8 @@ namespace CSharpOutline2019
         private void ExtendStartPoint()
         {
             //some are not extended
-            if (!Complete
-                || StartLine.LineNumber == EndLine.LineNumber
-                || !string.IsNullOrWhiteSpace(TextBefore)) return;
+            if (!Complete || StartLine.LineNumber == EndLine.LineNumber || !string.IsNullOrWhiteSpace(TextBefore))
+                return;
 
             //how much can we move region start
             int upperLimit = 0;
@@ -466,21 +518,6 @@ namespace CSharpOutline2019
                 }
             }
         }
-
-        /// <summary>
-        /// Gets line indent in whitespaces
-        /// </summary>
-        /// <param name="s">String to analyze</param>
-        /// <returns>Count of whitespaces in the beginning of string</returns>
-        private static int GetIndentation(string s)
-        {
-            int i = 0;
-            while (i < s.Length && char.IsWhiteSpace(s[i]))
-                i++;
-            //for lines entirely consisting of whitespace return int.MaxValue
-            //so it won't affect indentation calculation
-            return i == s.Length ? int.MaxValue : i;
-        }
     }
 
     [Export(typeof(ITaggerProvider))]
@@ -491,8 +528,12 @@ namespace CSharpOutline2019
     {
         [Import]
         IClassifierAggregatorService classifierAggregator = null;
+
         [Import]
-        IEditorOptionsFactoryService factory = null;
+        ITextEditorFactoryService textEditorFactory = null;
+
+        [Import]
+        IProjectionBufferFactoryService projectionBufferFactory = null;
 
         public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
         {
@@ -500,11 +541,10 @@ namespace CSharpOutline2019
             if (buffer is IProjectionBuffer) return null;
 
             IClassifier classifier = classifierAggregator.GetClassifier(buffer);
-            IEditorOptions editorOptions = factory.GetOptions(buffer);
             //var spans = c.GetClassificationSpans(new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length));
             //create a single tagger for each buffer.
 
-            return buffer.Properties.GetOrCreateSingletonProperty<ITagger<T>>(() => new CSharpOutliningTagger(buffer, classifier, editorOptions) as ITagger<T>);
+            return buffer.Properties.GetOrCreateSingletonProperty(() => new CSharpOutliningTagger(buffer, classifier, textEditorFactory, projectionBufferFactory) as ITagger<T>);
         }
     }
 }
