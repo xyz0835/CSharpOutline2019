@@ -6,4 +6,11 @@ An extension for Visual Studio 2019 to add curly braces outlining for C# editor,
 
 All the code comes from https://github.com/Skybladev2/C--outline-for-Visual-Studio , with some minor changes.
 
-![](demo.png)
+![catch & finally block](demo.png)
+</br></br>
+## 2020-09-26 Update
+
+- Implement tooltip with color and format which matches the theme of Visual Studio.
+</br></br>
+
+![theme tooltip](themetooltip.png)
