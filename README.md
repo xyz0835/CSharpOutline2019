@@ -1,10 +1,40 @@
 # CSharpOutline2019
 
+Visual Studio 2019 扩展，主要功能如下
+
+- 折叠花括号，特别是catch和finanlly块里的。 虽然2017以后的VS自带代码级别的折叠，但是不能折叠catch及finally的
+  
+![catch & finally block](demo.png)
+
+- 折叠多行注释。 VS只能折叠 `summary`注释
+
+![comments](comments.png)
+
+- 折叠预处理命令，比如 `#if` `#else` `#endif`,  `#region` `#endregion`。 主要是VS不折叠`#if` `#else` `#endif`
+
+![preprocessor](preprocessor.png)
+
+
+### 这三项功能和VS自带的功能有所重叠，所以需要取消勾选以下选项
+
+>工具-选项-文本编辑器-C#-高级-大纲，取消勾选 `显示声明级别构造的大纲`, `显示代码级别构造的大纲`, `显示注释和预处理区域的大纲`
+
+![uncheck](uncheck-cn.png)
+
+
+代码主要来源于两个地方
+
+- 折叠区域部分来源于 2015版的 [C# outline](https://github.com/Skybladev2/C--outline-for-Visual-Studio)
+- 带有着色效果的预览Tooltip 来自 [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
+
+
+----
+
 An extension for Visual Studio 2019 to add curly braces outlining for C# editor, **especially those braces in the catch & finally block**. It's better to disable built-in outlining.
 
->Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck 'Show outlining of declaration level constructs' and 'Show outlining of code level constructs'
+>Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs`
 
-All the code of CSharpOutliningTagger comes from https://github.com/Skybladev2/C--outline-for-Visual-Studio , with some  changes.
+The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.com/Skybladev2/C--outline-for-Visual-Studio) , with some changes.
 
 ![catch & finally block](demo.png)
 </br></br>
@@ -17,3 +47,21 @@ All the code of CSharpOutliningTagger comes from https://github.com/Skybladev2/C
 ![theme tooltip](themetooltip.png)
 
 >Code of this part comes from [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
+
+
+## 2020-09-28 Update
+
+- Collapse multiple lines of comments
+- Collapse some preprocessor commands, like `#if` `#else` `#endif`,  `#region` `#endregion`
+
+![comments](comments.png)
+
+</br>
+
+![preprocessor](preprocessor.png)
+
+Need to disable built-in outlining of comments and preprocessor commands
+>Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of comments and preprocessor regions`
+
+
+![uncheck](uncheck-en.png)
