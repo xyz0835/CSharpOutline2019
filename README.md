@@ -4,22 +4,22 @@ Visual Studio 2019 扩展，主要功能如下
 
 - 折叠花括号，特别是catch和finanlly块里的。 虽然2017以后的VS自带代码级别的折叠，但是不能折叠catch及finally里的
   
-![catch & finally block](images\demo.png)
+![catch & finally block](demo.png)
 
 - 折叠多行注释。 VS只能折叠 `summary`注释
 
-![comments](images\comments.png)
+![comments](comments.png)
 
 - 折叠预处理命令，比如 `#if` `#else` `#endif`,  `#region` `#endregion`。 主要是VS不折叠`#if` `#else` `#endif`
 
-![preprocessor](images\preprocessor.png)
+![preprocessor](preprocessor.png)
 
 
 ### 这三项功能和VS自带的功能有所重叠，所以需要取消勾选以下选项
 
 >工具-选项-文本编辑器-C#-高级-大纲，取消勾选 `显示声明级别构造的大纲`, `显示代码级别构造的大纲`, `显示注释和预处理区域的大纲`
 
-![uncheck](images\uncheck-cn.png)
+![uncheck](uncheck-cn.png)
 
 
 代码主要来源于两个地方
@@ -36,7 +36,7 @@ An extension for Visual Studio 2019 to add curly braces outlining for C# editor,
 
 The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.com/Skybladev2/C--outline-for-Visual-Studio) , with some changes.
 
-![catch & finally block](images\demo.png)
+![catch & finally block](demo.png)
 </br></br>
 ## 2020-09-26 Update
 
@@ -44,7 +44,7 @@ The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.co
  
 </br>
 
-![theme tooltip](images\themetooltip.png)
+![theme tooltip](themetooltip.png)
 
 >Code of this part comes from [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
 
@@ -54,14 +54,14 @@ The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.co
 - Collapse multiple lines of comments
 - Collapse some preprocessor commands, like `#if` `#else` `#endif`,  `#region` `#endregion`
 
-![comments](images\comments.png)
+![comments](comments.png)
 
 </br>
 
-![preprocessor](images\preprocessor.png)
+![preprocessor](preprocessor.png)
 
 Need to disable built-in outlining of comments and preprocessor commands
 >Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of comments and preprocessor regions`
 
 
-![uncheck](images\uncheck-en.png)
+![uncheck](uncheck-en.png)
