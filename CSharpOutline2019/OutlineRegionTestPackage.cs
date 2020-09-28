@@ -24,7 +24,7 @@ namespace CSharpOutline2019
     /// </para>
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [Guid(OutlineRegionTestPackage.PackageGuidString)]
+    [Guid(PackageGuidString)]
     public sealed class OutlineRegionTestPackage : AsyncPackage
     {
         /// <summary>

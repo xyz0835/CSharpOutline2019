@@ -5,6 +5,7 @@
         <DisplayName>CSharpOutline2019</DisplayName>
         <Description xml:space="preserve">Adds curly braces outlining for C# editor, include the braces in catch &amp; finally.  Need to disable built-in outlining of Visual Studio.
 		</Description>
+        <Icon>outlining.ico</Icon>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0, 17.0)" />
