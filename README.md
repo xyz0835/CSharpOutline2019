@@ -1,5 +1,49 @@
 # CSharpOutline2019
 
+----
+
+An extension for Visual Studio 2019 to add curly braces outlining for C# editor, **especially those braces in the catch & finally block**. It's better to disable built-in outlining.
+
+>Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs`
+
+The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.com/Skybladev2/C--outline-for-Visual-Studio) , with some changes.
+
+![catch & finally block](demo.png)
+</br></br>
+## 2020-09-26 Update
+
+- Implement tooltip with color and format which matches the theme of Visual Studio.  
+ 
+</br>
+
+![theme tooltip](themetooltip.png)
+
+>Code of this part comes from [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
+
+
+## 2020-09-28 Update
+
+- Collapse multiple lines of comments
+
+![comments](comments.png)
+
+- Collapse some preprocessor commands, like `#if` `#else` `#endif`,  `#region` `#endregion`
+
+![preprocessor](preprocessor.png)
+
+Need to disable built-in outlining of comments and preprocessor commands
+>Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of comments and preprocessor regions`
+
+![uncheck](uncheck-en.png)
+
+## 2020-10-12 Update
+
+- Collapse `using`
+
+![using](using.png)
+
+----
+
 Visual Studio 2019 扩展，主要功能如下
 
 - 折叠花括号，特别是catch和finanlly块里的。 虽然2017以后的VS自带代码级别的折叠，但是不能折叠catch及finally里的
@@ -30,47 +74,3 @@ Visual Studio 2019 扩展，主要功能如下
 - 折叠区域部分来源于 [C# outline 2010](https://github.com/Skybladev2/C--outline-for-Visual-Studio) 及 [C# outline 2015](https://github.com/Skybladev2/CSharpOutline2015)
 - 带有着色效果的预览Tooltip 来自 [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
 
-
-----
-
-An extension for Visual Studio 2019 to add curly braces outlining for C# editor, **especially those braces in the catch & finally block**. It's better to disable built-in outlining.
-
->Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs`
-
-The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.com/Skybladev2/C--outline-for-Visual-Studio) , with some changes.
-
-![catch & finally block](demo.png)
-</br></br>
-## 2020-09-26 Update
-
-- Implement tooltip with color and format which matches the theme of Visual Studio.  
- 
-</br>
-
-![theme tooltip](themetooltip.png)
-
->Code of this part comes from [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
-
-
-## 2020-09-28 Update
-
-- Collapse multiple lines of comments
-- Collapse some preprocessor commands, like `#if` `#else` `#endif`,  `#region` `#endregion`
-
-![comments](comments.png)
-
-</br>
-
-![preprocessor](preprocessor.png)
-
-Need to disable built-in outlining of comments and preprocessor commands
->Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of comments and preprocessor regions`
-
-
-![uncheck](uncheck-en.png)
-
-## 2020-10-12 Update
-
-- Collapse `using`
-
-![using](using.png)
