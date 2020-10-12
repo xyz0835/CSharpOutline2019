@@ -6,7 +6,7 @@ An extension for Visual Studio 2019 to add curly braces outlining for C# editor,
 
 >Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs`
 
-The code of CSharpOutliningTagger comes from [C# outline 2015](https://github.com/Skybladev2/C--outline-for-Visual-Studio) , with some changes.
+The code of CSharpOutliningTagger comes from [C# outline 2010](https://github.com/Skybladev2/C--outline-for-Visual-Studio) and [C# outline 2015](https://github.com/Skybladev2/CSharpOutline2015), with some changes.
 
 ![catch & finally block](demo.png)
 </br></br>
