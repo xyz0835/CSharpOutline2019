@@ -42,12 +42,12 @@ namespace CSharpOutline2019
             this.BufferFactory = bufferFactory;
 
             //timer that will trigger outlining update after some period of no buffer changes
-            UpdateTimer = new DispatcherTimer(DispatcherPriority.ApplicationIdle);
+            UpdateTimer = new DispatcherTimer(DispatcherPriority.Background);
             UpdateTimer.Interval = TimeSpan.FromMilliseconds(2500);
             UpdateTimer.Tick += (sender, args) =>
             {
                 UpdateTimer.Stop();
-                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
+                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.Background, null);
             };
 
             Classifier.ClassificationChanged += (sender, args) =>
@@ -67,7 +67,7 @@ namespace CSharpOutline2019
 
             //Force an initial full parse
             //Outline();
-            //ThreadHelper.Generic.BeginInvoke(DispatcherPriority.ApplicationIdle, Outline);
+            //ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
         }
 
         /// <summary>
