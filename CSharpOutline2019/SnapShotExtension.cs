@@ -5,13 +5,17 @@ namespace CSharpOutline2019
     internal static class SnapShotExtension
     {
 
-        public static int GetStartEmptyCount(this ITextSnapshotLine line, ITextSnapshot snapshot)
+        public static int GetStartEmptyCount(this ITextSnapshotLine line)
         {
-            int count = 0;
-            while (line.Start.Position < line.EndIncludingLineBreak.Position && char.IsWhiteSpace(snapshot[line.Start + count]))
-                count++;
+            string text = line.GetText();
 
-            return count;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (!char.IsWhiteSpace(text[i]))
+                    return i;
+            }
+
+            return 0;
         }
     }
 }

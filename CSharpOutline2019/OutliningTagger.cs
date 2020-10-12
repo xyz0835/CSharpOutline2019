@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Windows.Threading;
 using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudio.Shell;
 
 namespace CSharpOutline2019
 {
@@ -18,21 +19,23 @@ namespace CSharpOutline2019
     {
         //Add some fields to track the text buffer and snapshot and to accumulate the sets of lines that should be tagged as outlining regions. 
         //This code includes a list of Region objects (to be defined later) that represent the outlining regions.		
-        public ITextBuffer Buffer;
+        ITextBuffer Buffer;
         ITextSnapshot Snapshot;
-        List<TextRegion> Regions = new List<TextRegion>();
+        List<CodeRegin> Regions = new List<CodeRegin>();
         public IClassifier Classifier;
         public ITextEditorFactoryService EditorFactory;
         public IProjectionBufferFactoryService BufferFactory = null;
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
         private DispatcherTimer UpdateTimer;
+        bool isFirst = true;
+
+        bool isDisposed = false;
 
         public CSharpOutliningTagger(ITextBuffer buffer, IClassifier classifier, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
         {
             this.Buffer = buffer;
             this.Snapshot = buffer.CurrentSnapshot;
             this.Classifier = classifier;
-            this.Buffer.Changed += BufferChanged;
             // need Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods namespace to work
             //this.Classifier.ClassificationChanged += BufferChanged;			
             this.EditorFactory = editorFactory;
@@ -44,11 +47,27 @@ namespace CSharpOutline2019
             UpdateTimer.Tick += (sender, args) =>
             {
                 UpdateTimer.Stop();
-                this.Outline();
+                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
             };
 
-            //timer that will trigger outlining update after some period of no buffer changes     
-            this.Outline(); // Force an initial full parse			
+            Classifier.ClassificationChanged += (sender, args) =>
+            {
+                if (isFirst)
+                {
+                    Outline();
+                    isFirst = false;
+                }
+                else
+                {
+                    //restart the timer
+                    UpdateTimer.Stop();
+                    UpdateTimer.Start();
+                }
+            };
+
+            //Force an initial full parse
+            //Outline();
+            //ThreadHelper.Generic.BeginInvoke(DispatcherPriority.ApplicationIdle, Outline);
         }
 
         /// <summary>
@@ -62,29 +81,25 @@ namespace CSharpOutline2019
         {
             if (spans.Count == 0)
                 yield break;
-            List<TextRegion> currentRegions = this.Regions;
+            if (isDisposed)
+                yield break;
+
+            var currentRegions = this.Regions;
             ITextSnapshot currentSnapshot = this.Snapshot;
             SnapshotSpan entire = new SnapshotSpan(spans[0].Start, spans[spans.Count - 1].End).TranslateTo(currentSnapshot, SpanTrackingMode.EdgeExclusive);
             int startLineNumber = entire.Start.GetContainingLine().LineNumber;
             int endLineNumber = entire.End.GetContainingLine().LineNumber;
-            foreach (TextRegion region in currentRegions)
+            foreach (var region in currentRegions)
             {
-                if (region.StartLine.LineNumber <= endLineNumber && region.EndLine.LineNumber >= startLineNumber)
+                //这里不要判断Snapshot版本，长度等，不然会导致获取失败
+                if (region.Complete && region.StartLine.LineNumber <= endLineNumber && region.EndLine.LineNumber >= startLineNumber)
                 {
+                    if (isDisposed)
+                        yield break;
+
                     yield return region.ToOutliningRegionTag();
                 }
             }
-        }
-
-        /// <summary>
-        /// Add a BufferChanged event handler that responds to Changed events by parsing the text buffer.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void BufferChanged(object sender, TextContentChangedEventArgs e)
-        {
-            UpdateTimer.Stop();
-            UpdateTimer.Start();
         }
 
         /// <summary>
@@ -93,10 +108,9 @@ namespace CSharpOutline2019
         /// </summary>
         private void Outline()
         {
-            ITextSnapshot snapshot = Buffer.CurrentSnapshot;
-            SnapshotParser parser = new SnapshotParser(this);
-
-            List<TextRegion> newRegions = parser.GetRegions();
+            var snapshot = Buffer.CurrentSnapshot;
+            RegionFinder finder = new RegionFinder(this, snapshot);
+            var newRegions = finder.FindAll();
 
             List<Span> oldSpans = Regions.ConvertAll(r => r.ToSnapshotSpan().TranslateTo(snapshot, SpanTrackingMode.EdgeExclusive).Span);
             List<Span> newSpans = newRegions.ConvertAll(r => r.ToSnapshotSpan().Span);
@@ -125,7 +139,7 @@ namespace CSharpOutline2019
             this.Snapshot = snapshot;
             this.Regions = newRegions;
 
-            if (changeStart <= changeEnd && this.TagsChanged != null)
+            if (changeStart <= changeEnd && this.TagsChanged != null && !isDisposed)
             {
                 this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
             }
@@ -135,8 +149,9 @@ namespace CSharpOutline2019
 
         public void Dispose()
         {
+            isDisposed = true;
             UpdateTimer.Stop();
-            Buffer.Changed -= BufferChanged;
+            GC.SuppressFinalize(this);
         }
 
         #endregion
@@ -170,3 +185,7 @@ namespace CSharpOutline2019
         }
     }
 }
+
+
+//异步 https://github.com/EbenZhang/VbSharpOutliner/blob/09a0dee2d51cf094df8975080316302729f74dd9/VBSharpOutliner/OutliningTagger.cs
+//提取循环

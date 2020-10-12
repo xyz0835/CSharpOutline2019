@@ -35,6 +35,8 @@ namespace CSharpOutline2019
 
         public int Level { get; private set; } = 0;
 
+        public int SnapshotVersion = 0;
+
         public string InnerText => StartPoint.Snapshot.GetText(StartPoint.Position, EndPoint.Position - StartPoint.Position + 1);
 
         #endregion
@@ -54,6 +56,7 @@ namespace CSharpOutline2019
         {
             StartPoint = startPoint;
             RegionType = type;
+            SnapshotVersion = StartPoint.Snapshot.Version.VersionNumber;
         }
         #endregion
 
@@ -81,6 +84,8 @@ namespace CSharpOutline2019
         public string GetCollapsedText()
         {
             if (RegionType == TextRegionType.Comment)
+                return StartLine.GetText().Trim();
+            if (RegionType == TextRegionType.Using)
                 return StartLine.GetText().Trim();
             if (RegionType == TextRegionType.ProProcessor)
             {
@@ -180,7 +185,7 @@ namespace CSharpOutline2019
             if (RegionType == TextRegionType.Block)
                 currentLine = currentsnapshot.GetLineFromLineNumber(this.StartLine.LineNumber + 1);
             int totallengh = this.EndPoint.Position - currentLine.Start.Position;
-            if (totallengh < 1)
+            if (totallengh < 1 || !Complete)
             {
                 return sourceSpans;
             }

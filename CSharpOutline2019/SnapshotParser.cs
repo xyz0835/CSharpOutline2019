@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -9,19 +10,19 @@ namespace CSharpOutline2019
     /// </summary>
     class SnapshotParser
     {
-        private ITextSnapshot Snapshot;
-        public SnapshotPoint CurrentPoint { get; private set; }
+        ITextSnapshot Snapshot;
+        SnapshotPoint CurrentPoint { get; set; }
         /// <summary>
         /// classifier
         /// </summary>
-        private IClassifier Classifier;
-        private IList<ClassificationSpan> ClassificationSpans;
+        IClassifier Classifier;
+        IList<ClassificationSpan> ClassificationSpans;
         /// <summary>
         /// A dictionary (span start => span)
         /// </summary>
-        private Dictionary<int, ClassificationSpan> SpanIndex = new Dictionary<int, ClassificationSpan>();
+        Dictionary<int, ClassificationSpan> SpanIndex = new Dictionary<int, ClassificationSpan>();
 
-        public ClassificationSpan CurrentSpan { get; private set; }
+        ClassificationSpan CurrentSpan { get; set; }
 
         CSharpOutliningTagger Tagger;
 
@@ -43,28 +44,30 @@ namespace CSharpOutline2019
         {
             TextRegion regionTree = new TextRegion();
             //parsing snapshot
-            while (ParseBuffer(regionTree) != null) ;
+            while (FindChildRegions(regionTree) != null) ;
             List<TextRegion> newRegions = GetRegionList(regionTree);
             return newRegions;
         }
 
-
-        private List<TextRegion> GetRegionList(TextRegion tree)
+        List<TextRegion> GetRegionList(TextRegion tree)
         {
-            List<TextRegion> res = new List<TextRegion>(tree.Children.Count);
-            foreach (TextRegion r in tree.Children)
+            List<TextRegion> regions = new List<TextRegion>(tree.Children.Count);
+            foreach (var region in tree.Children)
             {
-                if (r.Complete && r.StartLine.LineNumber != r.EndLine.LineNumber)
-                    res.Add(r);
-                if (r.Children.Count != 0)
-                    res.AddRange(GetRegionList(r));
+                if (region.Complete && region.StartPoint.Snapshot != null && region.EndPoint.Snapshot != null)
+                {
+                    if (region.StartLine.LineNumber != region.EndLine.LineNumber)
+                        regions.Add(region);
+                }
+                if (region.Children.Count != 0)
+                    regions.AddRange(GetRegionList(region));
             }
 
             //assigning tagger
-            foreach (TextRegion r in res)
+            foreach (TextRegion r in regions)
                 r.Tagger = this.Tagger;
 
-            return res;
+            return regions;
         }
 
 
@@ -72,9 +75,9 @@ namespace CSharpOutline2019
         /// Moves forward by one char or one classification span
         /// </summary>
         /// <returns>true, if moved</returns>
-        public bool MoveNext()
+        bool MoveToNextSpan()
         {
-            if (!AtEnd())
+            if (!IsEnd)
             {
                 CurrentPoint = CurrentSpan != null ? CurrentSpan.Span.End : CurrentPoint + 1;
 
@@ -87,21 +90,11 @@ namespace CSharpOutline2019
             return false;
         }
 
-        public ClassificationSpan GetNextClassificationSpan()
-        {
-            var point = CurrentSpan != null ? CurrentSpan.Span.End : CurrentPoint + 1;
-
-            if (SpanIndex.ContainsKey(point.Position))
-                return SpanIndex[point.Position];
-            else
-                return null;
-        }
-
         /// <summary>
-        /// 直接转到下一行
+        /// Move to next line
         /// </summary>
         /// <returns></returns>
-        public bool MoveToNextLine()
+        bool MoveToNextLine()
         {
             var currentline = Snapshot.GetLineFromPosition(CurrentPoint.Position);
             if (currentline.LengthIncludingLineBreak < Snapshot.Length)
@@ -118,17 +111,42 @@ namespace CSharpOutline2019
             return false;
         }
 
-        public bool AtEnd()
+        ClassificationSpan GetNextClassificationSpan()
         {
-            return CurrentPoint.Position >= Snapshot.Length;
+            if (!IsEnd)
+            {
+                var point = CurrentSpan != null ? CurrentSpan.Span.End : CurrentPoint + 1;
+
+                if (SpanIndex.ContainsKey(point.Position))
+                    return SpanIndex[point.Position];
+                else
+                    return null;
+            }
+            return null;
         }
+
+        ClassificationSpan GetPreviousClassificationSpan()
+        {
+            if (CurrentSpan != null)
+            {
+                int index = ClassificationSpans.IndexOf(CurrentSpan);
+                if (index > 0)
+                {
+                    return ClassificationSpans[index - 1];
+                }
+            }
+            return null;
+        }
+
+
+        bool IsEnd => CurrentPoint.Position >= Snapshot.Length;
 
         /// <summary>
         /// parses input buffer, searches for region start
         /// </summary>
         /// <param name="parser"></param>
         /// <returns>created region or null</returns>
-        public TextRegion TryCreateRegion(TextRegion parent)
+        TextRegion TryCreateRegion(TextRegion parent)
         {
             SnapshotPoint point = CurrentPoint;
             ClassificationSpan span = CurrentSpan;
@@ -138,6 +156,16 @@ namespace CSharpOutline2019
                 var info = $"Text {Snapshot.GetText(CurrentSpan.Span)}, Type {span.ClassificationType.Classification}";
 #endif
                 var endPoint = span.Span.End.Position == Snapshot.Length ? span.Span.End : span.Span.End + 1;
+
+                //if (parent.RegionType == TextRegionType.Using)
+                //{
+                //    var spanText = Snapshot.GetText(span.Span);
+                //    if (span.ClassificationType.Classification != ClassificationName.Keyword && spanText != "using")
+                //    {
+                //        parent.Complete = true;
+                //    }
+                //}
+
                 if (span.ClassificationType.Classification == ClassificationName.Punctuation)
                 {
                     char c = point.GetChar();
@@ -152,12 +180,18 @@ namespace CSharpOutline2019
                     if (parent.RegionType == TextRegionType.Comment)
                     {
                         parent.EndPoint = endPoint;
+                        if (endPoint.Position == Snapshot.Length)
+                            parent.Complete = true;
                     }
                     else
                     {
-                        var region = new TextRegion(point, TextRegionType.Comment);
-                        region.EndPoint = endPoint;
-                        return region;
+                        //忽略行末的注释，避免行末的注释和下一行的注释组成一个Region。
+                        if (GetPreviousClassificationSpan().Span.Start.GetContainingLine().LineNumber != point.GetContainingLine().LineNumber)
+                        {
+                            var region = new TextRegion(point, TextRegionType.Comment);
+                            region.EndPoint = endPoint;
+                            return region;
+                        }
                     }
                 }
                 else if (ClassificationName.IsProcessor(span.ClassificationType.Classification))
@@ -215,6 +249,47 @@ namespace CSharpOutline2019
                         }
                     }
                 }
+                else if (ClassificationName.IsKeyword(span.ClassificationType.Classification))
+                {
+                    var spanText = Snapshot.GetText(CurrentSpan.Span);
+                    if (spanText == "using")
+                    {
+                        var lineEndPoint = Snapshot.GetLineFromPosition(span.Span.Start).End;
+                        if (lineEndPoint.Position < Snapshot.Length)
+                            lineEndPoint = lineEndPoint + 1;
+
+                        if (parent.RegionType != TextRegionType.Using)
+                        {
+                            var region = new TextRegion(point, TextRegionType.Using);
+                            region.EndPoint = lineEndPoint;
+
+                            while (MoveToNextLine())
+                            {
+#if DEBUG
+                                string lineText = Snapshot.GetLineFromPosition(CurrentPoint.Position).GetText();
+                                if (CurrentSpan != null)
+                                    spanText = Snapshot.GetText(CurrentSpan.Span);
+#endif
+
+                                if (CurrentSpan != null && ClassificationName.IsKeyword(CurrentSpan.ClassificationType.Classification) && Snapshot.GetText(CurrentSpan.Span) == "using")
+                                {
+
+                                    lineEndPoint = Snapshot.GetLineFromPosition(CurrentSpan.Span.Start).End;
+                                    if (lineEndPoint.Position < Snapshot.Length)
+                                        lineEndPoint = lineEndPoint + 1;
+
+                                    region.EndPoint = lineEndPoint;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            region.Complete = true;
+                            return region;
+                        }
+                    }
+                }
             }
             return null;
         }
@@ -224,7 +299,7 @@ namespace CSharpOutline2019
         /// </summary>
         /// <param name="parser">parser</param>
         /// <returns>whether region was closed</returns>
-        public bool TryComplete(TextRegion region)
+        bool TryComplete(TextRegion region)
         {
             if (region.Complete)
                 return true;
@@ -234,7 +309,7 @@ namespace CSharpOutline2019
             {
 #if DEBUG
                 var info = $"Text { Snapshot.GetText(CurrentSpan.Span)}, Type {span.ClassificationType.Classification}";
-#endif   
+#endif
                 if (region.RegionType == TextRegionType.Block)
                 {
                     if (span.ClassificationType.Classification == ClassificationName.Punctuation)
@@ -285,9 +360,9 @@ namespace CSharpOutline2019
         /// <param name="parser"></param>
         /// <param name="parent">parent region or null</param>
         /// <returns>a region with its children or null</returns>
-        public TextRegion ParseBuffer(TextRegion parent)
+        TextRegion FindChildRegions(TextRegion parent)
         {
-            for (; !AtEnd(); MoveNext())
+            while (!IsEnd)
             {
                 TextRegion region = TryCreateRegion(parent);
 
@@ -296,30 +371,28 @@ namespace CSharpOutline2019
                     if (region.RegionType == TextRegionType.ProProcessor)
                         MoveToNextLine();
                     else
-                        MoveNext();
+                        MoveToNextSpan();
+
                     parent.Add(region);
                     //found the start of the region
                     if (!region.Complete)
                     {
                         //searching for child regions						
-                        while (ParseBuffer(region) != null) ;
+                        while (FindChildRegions(region) != null) ;
                         //found everything
-
-                        region.ExtendStartPoint();
                     }
-                    //adding to children or merging with last child
-
                     return region;
                 }
                 //found parent's end - terminating parsing
                 if (TryComplete(parent))
                 {
-                    MoveNext();
+                    parent.ExtendStartPoint();
+                    MoveToNextSpan();
                     return null;
                 }
+                MoveToNextSpan();
             }
             return null;
         }
-
     }
 }

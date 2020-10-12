@@ -14,8 +14,11 @@ Visual Studio 2019 扩展，主要功能如下
 
 ![preprocessor](preprocessor.png)
 
+- 折叠using
 
-### 这三项功能和VS自带的功能有所重叠，所以需要取消勾选以下选项
+![using](using.png)
+
+### 这几项功能和VS自带的功能有所重叠，所以需要取消勾选以下选项
 
 >工具-选项-文本编辑器-C#-高级-大纲，取消勾选 `显示声明级别构造的大纲`, `显示代码级别构造的大纲`, `显示注释和预处理区域的大纲`
 
@@ -24,7 +27,7 @@ Visual Studio 2019 扩展，主要功能如下
 
 代码主要来源于两个地方
 
-- 折叠区域部分来源于 2015版的 [C# outline](https://github.com/Skybladev2/C--outline-for-Visual-Studio)
+- 折叠区域部分来源于 [C# outline 2010](https://github.com/Skybladev2/C--outline-for-Visual-Studio) 及 [C# outline 2015](https://github.com/Skybladev2/CSharpOutline2015)
 - 带有着色效果的预览Tooltip 来自 [Roslyn](https://github.com/Trieste-040/https-github.com-dotnet-roslyn/blob/2d22d1aa4f1dfe3ae6f8de8cb7ddc218a5f1c4ff/src/EditorFeatures/Core/Implementation/Structure/BlockTagState.cs)
 
 
@@ -65,3 +68,9 @@ Need to disable built-in outlining of comments and preprocessor commands
 
 
 ![uncheck](uncheck-en.png)
+
+## 2020-10-12 Update
+
+- Collapse `using`
+
+![using](using.png)

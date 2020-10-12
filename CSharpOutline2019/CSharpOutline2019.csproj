@@ -49,13 +49,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ClassificationName.cs" />
+    <Compile Include="CodeRegin.cs" />
     <Compile Include="IWpfTextViewExtensions.cs" />
     <Compile Include="OutliningTagger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="OutlineRegionTestPackage.cs" />
+    <Compile Include="RegionFinder.cs" />
     <Compile Include="SnapShotExtension.cs" />
-    <Compile Include="SnapshotParser.cs" />
-    <Compile Include="TextRegion.cs" />
     <Compile Include="TextRegionType.cs" />
     <Compile Include="ViewHostingControl.cs" />
   </ItemGroup>

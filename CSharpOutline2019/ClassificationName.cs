@@ -17,6 +17,8 @@
         /// </summary>
         internal const string Keyword = "keyword";
 
+        internal const string KeywordUnnecessary = "keyword - unnecessary code - (TRANSIENT)";
+
         /// <summary>
         /// 命名空间
         /// </summary>
@@ -97,6 +99,11 @@
         public static bool IsProcessor(string classfication)
         {
             return classfication == PreProcessorKeyword;
+        }
+
+        public static bool IsKeyword(string classfication)
+        {
+            return classfication.StartsWith("keyword");
         }
     }
 }
