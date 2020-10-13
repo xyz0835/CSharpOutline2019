@@ -81,7 +81,7 @@ namespace CSharpOutline2019
                             var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#region"));
                             if (region != null)
                             {
-                                region.EndPoint = span.Span.End;
+                                region.EndPoint = span.Span.Start.GetContainingLine().End;
                                 region.Complete = true;
                             }
                         }
@@ -90,7 +90,7 @@ namespace CSharpOutline2019
                             var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.ProProcessor && (n.StartLine.GetText().Trim().StartsWith("#if") || n.StartLine.GetText().Trim().StartsWith("#else")));
                             if (region != null)
                             {
-                                region.EndPoint = span.Span.End;
+                                region.EndPoint = span.Span.Start.GetContainingLine().End;
                                 region.Complete = true;
                             }
                         }
