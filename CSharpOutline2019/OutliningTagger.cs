@@ -46,7 +46,8 @@ namespace CSharpOutline2019
             UpdateTimer.Tick += (sender, args) =>
             {
                 UpdateTimer.Stop();
-                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.Background, null);
+                //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.Background, null);
+                Outline();
             };
 
             Classifier.ClassificationChanged += (sender, args) =>
@@ -57,8 +58,8 @@ namespace CSharpOutline2019
             };
 
             //Force an initial full parse
-            //Outline();
-            ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
+            Outline();
+            //ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
         }
 
         /// <summary>
