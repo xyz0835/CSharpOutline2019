@@ -27,7 +27,6 @@ namespace CSharpOutline2019
         public IProjectionBufferFactoryService BufferFactory = null;
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
         private DispatcherTimer UpdateTimer;
-        bool isFirst = true;
 
         bool isDisposed = false;
 
@@ -52,22 +51,14 @@ namespace CSharpOutline2019
 
             Classifier.ClassificationChanged += (sender, args) =>
             {
-                if (isFirst)
-                {
-                    Outline();
-                    isFirst = false;
-                }
-                else
-                {
-                    //restart the timer
-                    UpdateTimer.Stop();
-                    UpdateTimer.Start();
-                }
+                //restart the timer
+                UpdateTimer.Stop();
+                UpdateTimer.Start();
             };
 
             //Force an initial full parse
             //Outline();
-            //ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
+            ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
         }
 
         /// <summary>
@@ -102,46 +93,58 @@ namespace CSharpOutline2019
             }
         }
 
+        bool isProcessing = false;
+
         /// <summary>
         /// Add a method that parses the buffer. The example given here is for illustration only. 
         /// It synchronously parses the buffer into nested outlining regions.
         /// </summary>
         private void Outline()
         {
-            var snapshot = Buffer.CurrentSnapshot;
-            RegionFinder finder = new RegionFinder(this, snapshot);
-            var newRegions = finder.FindAll();
-
-            List<Span> oldSpans = Regions.ConvertAll(r => r.ToSnapshotSpan().TranslateTo(snapshot, SpanTrackingMode.EdgeExclusive).Span);
-            List<Span> newSpans = newRegions.ConvertAll(r => r.ToSnapshotSpan().Span);
-
-            NormalizedSpanCollection oldSpanCollection = new NormalizedSpanCollection(oldSpans);
-            NormalizedSpanCollection newSpanCollection = new NormalizedSpanCollection(newSpans);
-
-            //the changed regions are regions that appear in one set or the other, but not both.
-            NormalizedSpanCollection removed = NormalizedSpanCollection.Difference(oldSpanCollection, newSpanCollection);
-
-            int changeStart = int.MaxValue;
-            int changeEnd = -1;
-
-            if (removed.Count > 0)
+            if (isProcessing)
+                return;
+            isProcessing = true;
+            try
             {
-                changeStart = removed[0].Start;
-                changeEnd = removed[removed.Count - 1].End;
+                var snapshot = Buffer.CurrentSnapshot;
+                RegionFinder finder = new RegionFinder(this, snapshot);
+                var newRegions = finder.FindAll();
+
+                List<Span> oldSpans = Regions.ConvertAll(r => r.ToSnapshotSpan().TranslateTo(snapshot, SpanTrackingMode.EdgeExclusive).Span);
+                List<Span> newSpans = newRegions.ConvertAll(r => r.ToSnapshotSpan().Span);
+
+                NormalizedSpanCollection oldSpanCollection = new NormalizedSpanCollection(oldSpans);
+                NormalizedSpanCollection newSpanCollection = new NormalizedSpanCollection(newSpans);
+
+                //the changed regions are regions that appear in one set or the other, but not both.
+                NormalizedSpanCollection removed = NormalizedSpanCollection.Difference(oldSpanCollection, newSpanCollection);
+
+                int changeStart = int.MaxValue;
+                int changeEnd = -1;
+
+                if (removed.Count > 0)
+                {
+                    changeStart = removed[0].Start;
+                    changeEnd = removed[removed.Count - 1].End;
+                }
+
+                if (newSpans.Count > 0)
+                {
+                    changeStart = Math.Min(changeStart, newSpans[0].Start);
+                    changeEnd = Math.Max(changeEnd, newSpans[newSpans.Count - 1].End);
+                }
+
+                this.Snapshot = snapshot;
+                this.Regions = newRegions;
+
+                if (changeStart <= changeEnd && this.TagsChanged != null && !isDisposed)
+                {
+                    this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
+                }
             }
-
-            if (newSpans.Count > 0)
+            finally
             {
-                changeStart = Math.Min(changeStart, newSpans[0].Start);
-                changeEnd = Math.Max(changeEnd, newSpans[newSpans.Count - 1].End);
-            }
-
-            this.Snapshot = snapshot;
-            this.Regions = newRegions;
-
-            if (changeStart <= changeEnd && this.TagsChanged != null && !isDisposed)
-            {
-                this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
+                isProcessing = false;
             }
         }
 
