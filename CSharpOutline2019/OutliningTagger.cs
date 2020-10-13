@@ -28,8 +28,6 @@ namespace CSharpOutline2019
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
         private DispatcherTimer UpdateTimer;
 
-        bool isDisposed = false;
-
         public CSharpOutliningTagger(ITextBuffer buffer, IClassifier classifier, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
         {
             this.Buffer = buffer;
@@ -59,7 +57,6 @@ namespace CSharpOutline2019
 
             //Force an initial full parse
             Outline();
-            //ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
         }
 
         /// <summary>
@@ -73,8 +70,6 @@ namespace CSharpOutline2019
         {
             if (spans.Count == 0)
                 yield break;
-            if (isDisposed)
-                yield break;
 
             var currentRegions = this.Regions;
             ITextSnapshot currentSnapshot = this.Snapshot;
@@ -86,9 +81,6 @@ namespace CSharpOutline2019
                 //这里不要判断Snapshot版本，长度等，不然会导致获取失败
                 if (region.Complete && region.StartLine.LineNumber <= endLineNumber && region.EndLine.LineNumber >= startLineNumber)
                 {
-                    if (isDisposed)
-                        yield break;
-
                     yield return region.ToOutliningRegionTag();
                 }
             }
@@ -138,7 +130,7 @@ namespace CSharpOutline2019
                 this.Snapshot = snapshot;
                 this.Regions = newRegions;
 
-                if (changeStart <= changeEnd && this.TagsChanged != null && !isDisposed)
+                if (changeStart <= changeEnd && this.TagsChanged != null)
                 {
                     this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
                 }
@@ -153,7 +145,6 @@ namespace CSharpOutline2019
 
         public void Dispose()
         {
-            isDisposed = true;
             UpdateTimer.Stop();
             GC.SuppressFinalize(this);
         }
