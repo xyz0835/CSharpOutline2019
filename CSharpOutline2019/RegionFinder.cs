@@ -208,17 +208,32 @@ namespace CSharpOutline2019
                     {
                         if (spanText == "case" || spanText == "default")
                         {
-                            var region = Regions.LastOrDefault(item => !item.Complete && item.RegionType == TextRegionType.Switch);
-                            if (region != null)
+                            int index = spanIndex + 1;
+                            ClassificationSpan nextPunctuationSpan = null;
+                            while (index < ClassificationSpans.Count)
                             {
-                                if (spanIndex > 1)
-                                    region.EndPoint = ClassificationSpans[spanIndex - 1].Span.End;
-                                region.Complete = true;
+                                nextPunctuationSpan = ClassificationSpans[index++];
+                                if (nextPunctuationSpan.ClassificationType.Classification == ClassificationName.Punctuation)
+                                {
+                                    break;
+                                }
                             }
 
-                            region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch);
-                            region.StartSpanText = spanText;
-                            Regions.Add(region);
+                            //Ignore something like 'goto case StateEnum.Start;'
+                            if (nextPunctuationSpan?.Span.GetText() == ":")
+                            {
+                                var region = Regions.LastOrDefault(item => !item.Complete && item.RegionType == TextRegionType.Switch);
+                                if (region != null)
+                                {
+                                    if (spanIndex > 1)
+                                        region.EndPoint = ClassificationSpans[spanIndex - 1].Span.End;
+                                    region.Complete = true;
+                                }
+
+                                region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch);
+                                region.StartSpanText = spanText;
+                                Regions.Add(region);
+                            }
                         }
                     }
                 }
