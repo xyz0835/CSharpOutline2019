@@ -222,17 +222,23 @@ namespace CSharpOutline2019
                             //Ignore something like 'goto case StateEnum.Start;'
                             if (nextPunctuationSpan?.Span.GetText() == ":")
                             {
-                                var region = Regions.LastOrDefault(item => !item.Complete && item.RegionType == TextRegionType.Switch);
-                                if (region != null)
+                                var lastRegion = Regions.LastOrDefault();
+                                bool isInsideOpenBlock = lastRegion != null && !lastRegion.Complete && lastRegion.RegionType == TextRegionType.Block;
+                                if (!isInsideOpenBlock)
                                 {
-                                    if (spanIndex > 1)
-                                        region.EndPoint = ClassificationSpans[spanIndex - 1].Span.End;
-                                    region.Complete = true;
+                                    var openRegion = Regions.LastOrDefault(item => !item.Complete && item.RegionType == TextRegionType.Switch);
+                                    if (openRegion != null)
+                                    {
+                                        if (spanIndex > 1)
+                                            openRegion.EndPoint = ClassificationSpans[spanIndex - 1].Span.End;
+                                        openRegion.Complete = true;
+                                    }
                                 }
 
-                                region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch);
+                                var region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch);
                                 region.StartSpanText = spanText;
                                 Regions.Add(region);
+
                             }
                         }
                     }
