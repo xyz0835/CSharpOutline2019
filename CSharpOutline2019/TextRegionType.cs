@@ -7,6 +7,6 @@
         Comment,
         ProProcessor,
         Using,
+        Switch,
     }
-
 }

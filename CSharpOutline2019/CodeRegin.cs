@@ -37,6 +37,8 @@ namespace CSharpOutline2019
 
         public int SpanIndex = -1;
 
+        public string StartSpanText = null;
+
         public SnapshotSpan ToSnapshotSpan()
         {
             return new SnapshotSpan(this.StartPoint, this.EndPoint);

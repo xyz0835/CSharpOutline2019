@@ -7,7 +7,6 @@ using System.Globalization;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
-
 namespace CSharpOutline2019
 {
     class RegionFinder
@@ -31,6 +30,15 @@ namespace CSharpOutline2019
             for (int spanIndex = 0; spanIndex < ClassificationSpans.Count; spanIndex++)
             {
                 var span = ClassificationSpans[spanIndex];
+
+#if DEBUG
+                var classification = span.ClassificationType.Classification;
+                var spanTextDebug = span.Span.GetText();
+                var startLine = span.Span.Start.GetContainingLine();
+                var startLineNumber = startLine.LineNumber;
+                var startLineText = startLine.GetText();
+#endif
+
                 if (span.ClassificationType.Classification == ClassificationName.Punctuation)
                 {
                     var spanText = span.Span.GetText();
@@ -52,6 +60,17 @@ namespace CSharpOutline2019
                                 region.Complete = true;
                                 var endpoint = span.Span.Start + index + 1;
                                 region.EndPoint = endpoint;
+
+                                //if the block region starts outside the switch region
+                                var switchRegion = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Switch);
+                                if (switchRegion?.StartPoint > region.StartPoint)
+                                {
+                                    if (spanIndex > 1)
+                                    {
+                                        switchRegion.EndPoint = ClassificationSpans[spanIndex - 1].Span.End;
+                                        switchRegion.Complete = true;
+                                    }
+                                }
                             }
                         }
                     }
@@ -184,6 +203,23 @@ namespace CSharpOutline2019
                             }
                         }
                         Regions.Add(region);
+                    }
+                    if (span.ClassificationType.Classification == ClassificationName.KeywordControl)
+                    {
+                        if (spanText == "case" || spanText == "default")
+                        {
+                            var region = Regions.LastOrDefault(item => !item.Complete && item.RegionType == TextRegionType.Switch);
+                            if (region != null)
+                            {
+                                if (spanIndex > 1)
+                                    region.EndPoint = ClassificationSpans[spanIndex - 1].Span.End;
+                                region.Complete = true;
+                            }
+
+                            region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch);
+                            region.StartSpanText = spanText;
+                            Regions.Add(region);
+                        }
                     }
                 }
             }

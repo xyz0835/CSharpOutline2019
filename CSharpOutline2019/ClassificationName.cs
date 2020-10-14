@@ -17,6 +17,11 @@
         /// </summary>
         internal const string Keyword = "keyword";
 
+        /// <summary>
+        /// return break switch case etc
+        /// </summary>
+        internal const string KeywordControl = "keyword - control";
+
         internal const string KeywordUnnecessary = "keyword - unnecessary code - (TRANSIENT)";
 
         /// <summary>
@@ -68,11 +73,6 @@
         /// 标识符
         /// </summary>
         internal const string Identifier = "identifier";
-
-        /// <summary>
-        /// return break等
-        /// </summary>
-        internal const string KeywordControl = "keyword - control";
 
         internal const string XMLDocumentCommandDelimiter = "xml doc comment - delimiter";
         internal const string XMLDocumentCommandText = "xml doc comment - text";
