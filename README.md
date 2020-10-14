@@ -42,6 +42,12 @@ Need to disable built-in outlining of comments and preprocessor commands
 
 ![using](using.png)
 
+## 2020-10-14 Update
+
+- Collapse `case` & `default` in `switch` block
+
+![case](case.png)
+
 ----
 
 Visual Studio 2019 扩展，主要功能如下
@@ -58,9 +64,13 @@ Visual Studio 2019 扩展，主要功能如下
 
 ![preprocessor](preprocessor.png)
 
-- 折叠using
+- 折叠 `using`
 
 ![using](using.png)
+
+- 折叠 `switch` 里的 `case` & `default`
+
+![case](case.png)
 
 ### 这几项功能和VS自带的功能有所重叠，所以需要取消勾选以下选项
 
