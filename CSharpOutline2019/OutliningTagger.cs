@@ -39,12 +39,12 @@ namespace CSharpOutline2019
             this.BufferFactory = bufferFactory;
 
             //timer that will trigger outlining update after some period of no buffer changes
-            UpdateTimer = new DispatcherTimer(DispatcherPriority.Background);
+            UpdateTimer = new DispatcherTimer(DispatcherPriority.ApplicationIdle);
             UpdateTimer.Interval = TimeSpan.FromMilliseconds(2500);
             UpdateTimer.Tick += (sender, args) =>
             {
                 UpdateTimer.Stop();
-                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.Background, null);
+                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
                 //Outline();
             };
 
@@ -57,7 +57,7 @@ namespace CSharpOutline2019
 
             //Force an initial full parse
             //Outline();
-            ThreadHelper.Generic.BeginInvoke(DispatcherPriority.Background, Outline);
+            ThreadHelper.Generic.BeginInvoke(DispatcherPriority.ApplicationIdle, Outline);
         }
 
         /// <summary>
@@ -88,6 +88,8 @@ namespace CSharpOutline2019
         }
 
         bool isProcessing = false;
+
+        bool isReporting = false;
 
         /// <summary>
         /// Add a method that parses the buffer. The example given here is for illustration only. 
@@ -133,7 +135,15 @@ namespace CSharpOutline2019
 
                 if (changeStart <= changeEnd && this.TagsChanged != null)
                 {
-                    this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
+                    isReporting = true;
+                    try
+                    {
+                        this.TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(this.Snapshot, Span.FromBounds(changeStart, changeEnd))));
+                    }
+                    finally
+                    {
+                        isReporting = false;
+                    }
                 }
             }
             finally
@@ -146,6 +156,8 @@ namespace CSharpOutline2019
 
         public void Dispose()
         {
+            if (isReporting)
+                return;
             UpdateTimer.Stop();
             GC.SuppressFinalize(this);
         }
