@@ -61,7 +61,7 @@ namespace CSharpOutline2019
                                 var endpoint = span.Span.Start + index + 1;
                                 region.EndPoint = endpoint;
 
-                                //if the block region starts outside the switch region
+                                //if the block region starts outside the switch region，then the switch region should be closed
                                 var switchRegion = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Switch);
                                 if (switchRegion?.StartPoint > region.StartPoint)
                                 {
@@ -252,7 +252,14 @@ namespace CSharpOutline2019
                 if (item.RegionType == TextRegionType.Block)
                 {
                     if (item.SpanIndex > 0)
-                        item.StartPoint = ClassificationSpans[item.SpanIndex - 1].Span.End;
+                    {
+                        var previousSpan = ClassificationSpans[item.SpanIndex - 1];
+                        if (item.StartLine.LineNumber == previousSpan.Span.End.GetContainingLine().LineNumber + 1)
+                        {
+                            item.StartsFromLastLine = true;
+                            item.StartPoint = previousSpan.Span.End;
+                        }
+                    }
                 }
             });
             return Regions;

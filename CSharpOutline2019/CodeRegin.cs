@@ -31,6 +31,8 @@ namespace CSharpOutline2019
 
         public SnapshotPoint EndPoint;
 
+        public bool StartsFromLastLine = false;
+
         public ITextSnapshotLine StartLine => StartPoint.GetContainingLine();
 
         public ITextSnapshotLine EndLine => EndPoint.GetContainingLine();
@@ -109,7 +111,7 @@ namespace CSharpOutline2019
             var sourceSpans = new List<object>();
             //start from second line
             var currentLine = this.StartLine;
-            if (RegionType == TextRegionType.Block)
+            if (StartsFromLastLine)
                 currentLine = currentsnapshot.GetLineFromLineNumber(this.StartLine.LineNumber + 1);
             int totallengh = this.EndPoint.Position - currentLine.Start.Position;
             if (totallengh < 1 || !Complete)
@@ -167,7 +169,7 @@ namespace CSharpOutline2019
                         break;
                     }
 
-                    //stop when more than 40 lines in hover content
+                    //stop if there is more than 40 lines in hover content
                     if (sourceSpans.Count > maxcount)
                     {
                         sourceSpans.Add(Environment.NewLine);
