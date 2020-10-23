@@ -48,16 +48,30 @@ namespace CSharpOutline2019
                 //Outline();
             };
 
-            Classifier.ClassificationChanged += (sender, args) =>
-            {
-                //restart the timer
-                UpdateTimer.Stop();
-                UpdateTimer.Start();
-            };
+            //Classifier.ClassificationChanged += (sender, args) =>
+            //{
+            //    //restart the timer
+            //    UpdateTimer.Stop();
+            //    UpdateTimer.Start();
+            //};
+
+            this.Buffer.Changed += Buffer_Changed;
 
             //Force an initial full parse
             //Outline();
             ThreadHelper.Generic.BeginInvoke(DispatcherPriority.ApplicationIdle, Outline);
+        }
+
+        private void Buffer_Changed(object sender, TextContentChangedEventArgs e)
+        {
+            // If this isn't the most up-to-date version of the buffer, 
+            // then ignore it for now (we'll eventually get another change event). 
+            if (e.After != Buffer.CurrentSnapshot)
+                return;
+            if (Buffer.EditInProgress)
+                return;
+            UpdateTimer.Stop();
+            UpdateTimer.Start();
         }
 
         /// <summary>
