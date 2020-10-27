@@ -16,7 +16,7 @@ namespace CSharpOutline2019
         ITextSnapshot Snapshot;
         IClassifier Classifier;
         ITextEditorFactoryService EditorFactory;
-        IProjectionBufferFactoryService BufferFactory = null;
+        IProjectionBufferFactoryService BufferFactory;
         IList<ClassificationSpan> ClassificationSpans;
 
         public RegionFinder(ITextSnapshot snapshot, IClassifier classifier, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
@@ -58,7 +58,7 @@ namespace CSharpOutline2019
                             var endpoint = span.Span.Start + index + 1;
                             region.EndPoint = endpoint;
 
-                            //if the block region starts outside the switch region，then the switch region should be closed
+                            //if the closing block region starts outside the switch region，then the switch region should be closed
                             var switchRegion = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Switch);
                             if (switchRegion?.StartPoint > region.StartPoint)
                             {

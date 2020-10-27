@@ -23,9 +23,19 @@ namespace CSharpOutline2019
             BufferFactory = bufferFactory;
         }
 
+#if DEBUG
+
+        public string DebugStartLineText => StartLine.GetText();
+
+        public string DebugEndLineText => Complete ? EndLine.GetText() : "";
+
+        public string DebugRegionText => Complete ? StartPoint.Snapshot.GetText(StartPoint.Position, EndPoint.Position - StartPoint.Position) : "";
+
+#endif
+
 
         ITextEditorFactoryService EditorFactory;
-        IProjectionBufferFactoryService BufferFactory = null;
+        IProjectionBufferFactoryService BufferFactory;
 
 
         public TextRegionType RegionType = TextRegionType.None;
