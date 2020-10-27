@@ -98,10 +98,15 @@ namespace CSharpOutline2019
 
         public ViewHostingControl ToHoverControl()
         {
+            var viewHostingControl = new ViewHostingControl((tb) => CreateTextView(EditorFactory, tb), GetHoverBuffer);
+            return viewHostingControl;
+        }
+
+        public ITextBuffer GetHoverBuffer()
+        {
             var objects = ToCollapsedObjects();
             var projectionBuffer = BufferFactory.CreateProjectionBuffer(null, objects, ProjectionBufferOptions.None);
-            var viewHostingControl = new ViewHostingControl((tb) => CreateTextView(EditorFactory, projectionBuffer), () => projectionBuffer);
-            return viewHostingControl;
+            return projectionBuffer;
         }
 
         /// <summary>
@@ -197,7 +202,6 @@ namespace CSharpOutline2019
         {
             //var roles = textEditorFactoryService.CreateTextViewRoleSet("OutliningRegionTextViewRole");
             var view = textEditorFactoryService.CreateTextView(finalBuffer, textEditorFactoryService.NoRoles);
-
             view.Background = Brushes.Transparent;
             view.SizeToFit();
             // Zoom out a bit to shrink the text.
