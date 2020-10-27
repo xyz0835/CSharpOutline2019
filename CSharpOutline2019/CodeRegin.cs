@@ -14,14 +14,19 @@ namespace CSharpOutline2019
 {
     internal class CodeRegin
     {
-        public CodeRegin(SnapshotPoint start, TextRegionType regionType)
+        public CodeRegin(SnapshotPoint start, TextRegionType regionType, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
         {
             StartPoint = start;
             EndPoint = start;
             RegionType = regionType;
+            EditorFactory = editorFactory;
+            BufferFactory = bufferFactory;
         }
 
-        public CSharpOutliningTagger Tagger;
+
+        ITextEditorFactoryService EditorFactory;
+        IProjectionBufferFactoryService BufferFactory = null;
+
 
         public TextRegionType RegionType = TextRegionType.None;
 
@@ -50,7 +55,7 @@ namespace CSharpOutline2019
         public TagSpan<IOutliningRegionTag> ToOutliningRegionTag()
         {
             SnapshotSpan span = this.ToSnapshotSpan();
-
+            //return new TagSpan<IOutliningRegionTag>(span, new OutliningRegionTag(false, false, GetCollapsedText(), "..."));
             return new TagSpan<IOutliningRegionTag>(span, new OutliningRegionTag(false, false, GetCollapsedText(), ToHoverControl()));
         }
 
@@ -93,10 +98,9 @@ namespace CSharpOutline2019
 
         public ViewHostingControl ToHoverControl()
         {
-            ViewHostingControl viewHostingControl = null;
             var objects = ToCollapsedObjects();
-            var projectionBuffer = Tagger.BufferFactory.CreateProjectionBuffer(null, objects, ProjectionBufferOptions.PermissiveEdgeInclusiveSourceSpans);
-            viewHostingControl = new ViewHostingControl((tb) => CreateTextView(Tagger.EditorFactory, projectionBuffer), () => projectionBuffer);
+            var projectionBuffer = BufferFactory.CreateProjectionBuffer(null, objects, ProjectionBufferOptions.None);
+            var viewHostingControl = new ViewHostingControl((tb) => CreateTextView(EditorFactory, projectionBuffer), () => projectionBuffer);
             return viewHostingControl;
         }
 
@@ -191,8 +195,8 @@ namespace CSharpOutline2019
 
         internal static IWpfTextView CreateTextView(ITextEditorFactoryService textEditorFactoryService, ITextBuffer finalBuffer)
         {
-            var roles = textEditorFactoryService.CreateTextViewRoleSet("OutliningRegionTextViewRole");
-            var view = textEditorFactoryService.CreateTextView(finalBuffer, roles);
+            //var roles = textEditorFactoryService.CreateTextViewRoleSet("OutliningRegionTextViewRole");
+            var view = textEditorFactoryService.CreateTextView(finalBuffer, textEditorFactoryService.NoRoles);
 
             view.Background = Brushes.Transparent;
             view.SizeToFit();

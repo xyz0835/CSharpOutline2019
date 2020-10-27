@@ -6,21 +6,25 @@ using System.Threading.Tasks;
 using System.Globalization;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace CSharpOutline2019
 {
     class RegionFinder
     {
-        CSharpOutliningTagger Tagger = null;
         ITextSnapshot Snapshot;
         IClassifier Classifier;
+        ITextEditorFactoryService EditorFactory;
+        IProjectionBufferFactoryService BufferFactory = null;
         IList<ClassificationSpan> ClassificationSpans;
 
-        public RegionFinder(CSharpOutliningTagger tagger, ITextSnapshot snapshot)
+        public RegionFinder(ITextSnapshot snapshot, IClassifier classifier, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
         {
-            this.Tagger = tagger;
             this.Snapshot = snapshot;
-            this.Classifier = tagger.Classifier;
+            this.Classifier = classifier;
+            this.EditorFactory = editorFactory;
+            this.BufferFactory = bufferFactory;
             this.ClassificationSpans = Classifier.GetClassificationSpans(new SnapshotSpan(Snapshot, 0, Snapshot.Length));
         }
 
@@ -71,7 +75,7 @@ namespace CSharpOutline2019
                     if (index > -1)
                     {
                         var startPoint = span.Span.Start;
-                        var blockRegion = new CodeRegin(startPoint + index, TextRegionType.Block);
+                        var blockRegion = new CodeRegin(startPoint + index, TextRegionType.Block, EditorFactory, BufferFactory);
                         blockRegion.SpanIndex = spanIndex;
                         Regions.Add(blockRegion);
                     }
@@ -81,7 +85,7 @@ namespace CSharpOutline2019
                     var spanText = span.Span.GetText();
                     if (spanText == "#region" || spanText == "#if" || spanText == "#else")
                     {
-                        var region = new CodeRegin(span.Span.Start, TextRegionType.ProProcessor);
+                        var region = new CodeRegin(span.Span.Start, TextRegionType.ProProcessor, EditorFactory, BufferFactory);
                         Regions.Add(region);
 
                         if (spanText == "#else")
@@ -132,7 +136,7 @@ namespace CSharpOutline2019
                     var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Comment);
                     if (region == null)
                     {
-                        region = new CodeRegin(span.Span.Start, TextRegionType.Comment);
+                        region = new CodeRegin(span.Span.Start, TextRegionType.Comment, EditorFactory, BufferFactory);
                         region.EndPoint = span.Span.End;
                         Regions.Add(region);
                     }
@@ -169,7 +173,7 @@ namespace CSharpOutline2019
                     var spanText = span.Span.GetText();
                     if (spanText == "using")
                     {
-                        var region = new CodeRegin(span.Span.Start, TextRegionType.Using);
+                        var region = new CodeRegin(span.Span.Start, TextRegionType.Using, EditorFactory, BufferFactory);
                         region.EndPoint = span.Span.Start.GetContainingLine().End;
                         int index = spanIndex;
                         int lineNo = span.Span.Start.GetContainingLine().LineNumber;
@@ -236,7 +240,7 @@ namespace CSharpOutline2019
                                     }
                                 }
 
-                                var region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch);
+                                var region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch, EditorFactory, BufferFactory);
                                 region.StartSpanText = spanText;
                                 Regions.Add(region);
                             }
@@ -248,7 +252,6 @@ namespace CSharpOutline2019
             Regions.RemoveAll(item => !item.Complete || item.StartLine.LineNumber == item.EndLine.LineNumber);
             Regions.ForEach(item =>
             {
-                item.Tagger = Tagger;
                 if (item.RegionType == TextRegionType.Block)
                 {
                     if (item.SpanIndex > 0)

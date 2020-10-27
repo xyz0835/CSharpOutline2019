@@ -88,7 +88,7 @@
         /// <returns></returns>
         public static bool IsComment(string classfication)
         {
-            return classfication == Comment || classfication.StartsWith("xml doc comment"); //
+            return classfication == Comment || classfication.StartsWith("xml doc comment"); 
         }
 
         /// <summary>

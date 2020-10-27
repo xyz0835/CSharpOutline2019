@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -22,9 +22,9 @@ namespace CSharpOutline2019
         ITextBuffer Buffer;
         ITextSnapshot Snapshot;
         List<CodeRegin> Regions = new List<CodeRegin>();
-        public IClassifier Classifier;
-        public ITextEditorFactoryService EditorFactory;
-        public IProjectionBufferFactoryService BufferFactory = null;
+        IClassifier Classifier;
+        ITextEditorFactoryService EditorFactory;
+        IProjectionBufferFactoryService BufferFactory = null;
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
         private DispatcherTimer UpdateTimer;
 
@@ -41,11 +41,19 @@ namespace CSharpOutline2019
             //timer that will trigger outlining update after some period of no buffer changes
             UpdateTimer = new DispatcherTimer(DispatcherPriority.ApplicationIdle);
             UpdateTimer.Interval = TimeSpan.FromMilliseconds(2500);
+
             UpdateTimer.Tick += (sender, args) =>
             {
                 UpdateTimer.Stop();
-                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
+                //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
                 //Outline();
+
+                ThreadHelper.JoinableTaskFactory.Run(async delegate
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
+                    Outline();
+                });
             };
 
             //Classifier.ClassificationChanged += (sender, args) =>
@@ -59,6 +67,7 @@ namespace CSharpOutline2019
 
             //Force an initial full parse
             //Outline();
+            
             ThreadHelper.Generic.BeginInvoke(DispatcherPriority.ApplicationIdle, Outline);
         }
 
@@ -117,7 +126,7 @@ namespace CSharpOutline2019
             try
             {
                 var snapshot = Buffer.CurrentSnapshot;
-                RegionFinder finder = new RegionFinder(this, snapshot);
+                RegionFinder finder = new RegionFinder(snapshot, Classifier, EditorFactory, BufferFactory);
                 var newRegions = finder.FindAll();
 
                 List<Span> oldSpans = Regions.ConvertAll(r => r.ToSnapshotSpan().TranslateTo(snapshot, SpanTrackingMode.EdgeExclusive).Span);
@@ -170,9 +179,9 @@ namespace CSharpOutline2019
 
         public void Dispose()
         {
+            UpdateTimer.Stop();
             if (isReporting)
                 return;
-            UpdateTimer.Stop();
             GC.SuppressFinalize(this);
         }
 

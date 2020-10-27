@@ -21,21 +21,6 @@ namespace CSharpOutline2019
             this.IsVisibleChanged += OnIsVisibleChanged;
         }
 
-        public ITextView TextView_TestOnly
-        {
-            get
-            {
-                var view = (IWpfTextView)this.Content;
-                if (view == null)
-                {
-                    view = _createView(_createBuffer());
-                    this.Content = view.VisualElement;
-                }
-
-                return view;
-            }
-        }
-
         private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             var nowVisible = (bool)e.NewValue;
