@@ -14,7 +14,7 @@ namespace CSharpOutline2019
 {
     internal class CodeRegin
     {
-        public CodeRegin(SnapshotPoint start, TextRegionType regionType, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
+        public CodeRegin(SnapshotPoint start, CodeRegionType regionType, ITextEditorFactoryService editorFactory, IProjectionBufferFactoryService bufferFactory)
         {
             StartPoint = start;
             EndPoint = start;
@@ -38,7 +38,7 @@ namespace CSharpOutline2019
         IProjectionBufferFactoryService BufferFactory;
 
 
-        public TextRegionType RegionType = TextRegionType.None;
+        public CodeRegionType RegionType = CodeRegionType.None;
 
         public bool Complete = false;
 
@@ -71,7 +71,7 @@ namespace CSharpOutline2019
 
         public string GetCollapsedText()
         {
-            if (RegionType == TextRegionType.Comment)
+            if (RegionType == CodeRegionType.Comment)
             {
                 var text = StartLine.GetText().Trim();
                 if (text.Contains("<summary>"))
@@ -86,9 +86,9 @@ namespace CSharpOutline2019
                     text = text.Remove(100) + " ...";
                 return text;
             }
-            if (RegionType == TextRegionType.Using)
+            if (RegionType == CodeRegionType.Using)
                 return StartLine.GetText().Trim();
-            if (RegionType == TextRegionType.ProProcessor)
+            if (RegionType == CodeRegionType.ProProcessor)
             {
                 string text = StartLine.GetText().Trim();
                 if (text.StartsWith("#if"))

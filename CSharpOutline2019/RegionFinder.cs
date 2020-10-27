@@ -51,7 +51,7 @@ namespace CSharpOutline2019
                     int index = spanText.IndexOf("}");
                     if (index > -1)
                     {
-                        var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Block);
+                        var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.Block);
                         if (region != null)
                         {
                             region.Complete = true;
@@ -59,7 +59,7 @@ namespace CSharpOutline2019
                             region.EndPoint = endpoint;
 
                             //if the closing block region starts outside the switch region，then the switch region should be closed
-                            var switchRegion = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Switch);
+                            var switchRegion = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.Switch);
                             if (switchRegion?.StartPoint > region.StartPoint)
                             {
                                 if (spanIndex > 1)
@@ -75,7 +75,7 @@ namespace CSharpOutline2019
                     if (index > -1)
                     {
                         var startPoint = span.Span.Start;
-                        var blockRegion = new CodeRegin(startPoint + index, TextRegionType.Block, EditorFactory, BufferFactory);
+                        var blockRegion = new CodeRegin(startPoint + index, CodeRegionType.Block, EditorFactory, BufferFactory);
                         blockRegion.SpanIndex = spanIndex;
                         Regions.Add(blockRegion);
                     }
@@ -85,12 +85,12 @@ namespace CSharpOutline2019
                     var spanText = span.Span.GetText();
                     if (spanText == "#region" || spanText == "#if" || spanText == "#else")
                     {
-                        var region = new CodeRegin(span.Span.Start, TextRegionType.ProProcessor, EditorFactory, BufferFactory);
+                        var region = new CodeRegin(span.Span.Start, CodeRegionType.ProProcessor, EditorFactory, BufferFactory);
                         Regions.Add(region);
 
                         if (spanText == "#else")
                         {
-                            region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#if"));
+                            region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#if"));
                             if (region != null)
                             {
                                 region.EndPoint = span.Span.Start - 1;
@@ -102,7 +102,7 @@ namespace CSharpOutline2019
                     {
                         if (spanText == "#endregion")
                         {
-                            var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#region"));
+                            var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#region"));
                             if (region != null)
                             {
                                 region.EndPoint = span.Span.Start.GetContainingLine().End;
@@ -111,7 +111,7 @@ namespace CSharpOutline2019
                         }
                         else if (spanText == "#endif")
                         {
-                            var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.ProProcessor && (n.StartLine.GetText().Trim().StartsWith("#if") || n.StartLine.GetText().Trim().StartsWith("#else")));
+                            var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.ProProcessor && (n.StartLine.GetText().Trim().StartsWith("#if") || n.StartLine.GetText().Trim().StartsWith("#else")));
                             if (region != null)
                             {
                                 region.EndPoint = span.Span.Start.GetContainingLine().End;
@@ -133,10 +133,10 @@ namespace CSharpOutline2019
                         }
                     }
 
-                    var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == TextRegionType.Comment);
+                    var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.Comment);
                     if (region == null)
                     {
-                        region = new CodeRegin(span.Span.Start, TextRegionType.Comment, EditorFactory, BufferFactory);
+                        region = new CodeRegin(span.Span.Start, CodeRegionType.Comment, EditorFactory, BufferFactory);
                         region.EndPoint = span.Span.End;
                         Regions.Add(region);
                     }
@@ -173,7 +173,7 @@ namespace CSharpOutline2019
                     var spanText = span.Span.GetText();
                     if (spanText == "using")
                     {
-                        var region = new CodeRegin(span.Span.Start, TextRegionType.Using, EditorFactory, BufferFactory);
+                        var region = new CodeRegin(span.Span.Start, CodeRegionType.Using, EditorFactory, BufferFactory);
                         region.EndPoint = span.Span.Start.GetContainingLine().End;
                         int index = spanIndex;
                         int lineNo = span.Span.Start.GetContainingLine().LineNumber;
@@ -228,10 +228,10 @@ namespace CSharpOutline2019
                             if (nextPunctuationSpan?.Span.GetText() == ":")
                             {
                                 var lastRegion = Regions.LastOrDefault();
-                                bool isInsideOpenBlock = lastRegion != null && !lastRegion.Complete && lastRegion.RegionType == TextRegionType.Block;
+                                bool isInsideOpenBlock = lastRegion != null && !lastRegion.Complete && lastRegion.RegionType == CodeRegionType.Block;
                                 if (!isInsideOpenBlock)
                                 {
-                                    var openRegion = Regions.LastOrDefault(item => !item.Complete && item.RegionType == TextRegionType.Switch);
+                                    var openRegion = Regions.LastOrDefault(item => !item.Complete && item.RegionType == CodeRegionType.Switch);
                                     if (openRegion != null)
                                     {
                                         if (spanIndex > 1)
@@ -240,7 +240,7 @@ namespace CSharpOutline2019
                                     }
                                 }
 
-                                var region = new CodeRegin(span.Span.End.GetContainingLine().End, TextRegionType.Switch, EditorFactory, BufferFactory);
+                                var region = new CodeRegin(span.Span.End.GetContainingLine().End, CodeRegionType.Switch, EditorFactory, BufferFactory);
                                 region.StartSpanText = spanText;
                                 Regions.Add(region);
                             }
@@ -252,7 +252,7 @@ namespace CSharpOutline2019
             Regions.RemoveAll(item => !item.Complete || item.StartLine.LineNumber == item.EndLine.LineNumber);
             Regions.ForEach(item =>
             {
-                if (item.RegionType == TextRegionType.Block)
+                if (item.RegionType == CodeRegionType.Block)
                 {
                     if (item.SpanIndex > 0)
                     {

@@ -56,7 +56,7 @@
     <Compile Include="OutlineRegionTestPackage.cs" />
     <Compile Include="RegionFinder.cs" />
     <Compile Include="SnapShotExtension.cs" />
-    <Compile Include="TextRegionType.cs" />
+    <Compile Include="CodeRegionType.cs" />
     <Compile Include="ViewHostingControl.cs" />
   </ItemGroup>
   <ItemGroup>

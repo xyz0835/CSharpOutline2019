@@ -1,6 +1,6 @@
 ﻿namespace CSharpOutline2019
 {
-    internal enum TextRegionType
+    internal enum CodeRegionType
     {
         None,
         Block, // {}
