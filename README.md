@@ -2,9 +2,11 @@
 
 ----
 
-An extension for Visual Studio 2019 to add curly braces outlining for C# editor, **especially those braces in the catch & finally block**. It's better to disable built-in outlining.
+An extension for Visual Studio 2017/2019 to add curly braces outlining for C# editor, **especially those braces in the catch & finally block**. It's better to disable built-in outlining.
 
->Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs`
+>Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs` and `Show outlining of comments and preprocessor regions`
+
+![uncheck](uncheck-en.png)
 
 The code of CSharpOutliningTagger comes from [C# outline 2010](https://github.com/Skybladev2/C--outline-for-Visual-Studio) and [C# outline 2015](https://github.com/Skybladev2/CSharpOutline2015), with some changes.
 
@@ -31,10 +33,6 @@ The code of CSharpOutliningTagger comes from [C# outline 2010](https://github.co
 
 ![preprocessor](preprocessor.png)
 
-Need to disable built-in outlining of comments and preprocessor commands
->Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of comments and preprocessor regions`
-
-![uncheck](uncheck-en.png)
 
 ## 2020-10-12 Update
 
@@ -48,9 +46,13 @@ Need to disable built-in outlining of comments and preprocessor commands
 
 ![case](case.png)
 
+## 2020-10-27 Update
+
+- Support Visual Studio 2017
+
 ----
 
-Visual Studio 2019 扩展，主要功能如下
+Visual Studio 2017/2019 扩展，主要功能如下
 
 - 折叠花括号，特别是catch和finanlly块里的。 虽然2017以后的VS自带代码级别的折叠，但是不能折叠catch及finally里的
   

@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -8,7 +8,9 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Windows.Threading;
 using Microsoft.VisualStudio.Text.Projection;
+#if !VS2017
 using Microsoft.VisualStudio.Shell;
+#endif
 
 namespace CSharpOutline2019
 {
@@ -45,15 +47,17 @@ namespace CSharpOutline2019
             UpdateTimer.Tick += (sender, args) =>
             {
                 UpdateTimer.Stop();
-                //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
-                //Outline();
 
+#if VS2017
+                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
+#else
                 ThreadHelper.JoinableTaskFactory.Run(async delegate
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Outline()), DispatcherPriority.ApplicationIdle, null);
                     Outline();
                 });
+#endif
             };
 
             //Classifier.ClassificationChanged += (sender, args) =>
@@ -66,9 +70,11 @@ namespace CSharpOutline2019
             this.Buffer.Changed += Buffer_Changed;
 
             //Force an initial full parse
-            //Outline();
-            
+#if VS2017
+            Outline();
+#else
             ThreadHelper.Generic.BeginInvoke(DispatcherPriority.ApplicationIdle, Outline);
+#endif
         }
 
         private void Buffer_Changed(object sender, TextContentChangedEventArgs e)

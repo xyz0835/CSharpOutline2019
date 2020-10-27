@@ -209,8 +209,11 @@ namespace CSharpOutline2019
                         }
                         Regions.Add(region);
                     }
+#if !VS2017
                     if (span.ClassificationType.Classification == ClassificationName.KeywordControl)
+#endif
                     {
+                        //in VS2017 it is just 'keyword' , not 'keyword - control'
                         if (spanText == "case" || spanText == "default")
                         {
                             int index = spanIndex + 1;
