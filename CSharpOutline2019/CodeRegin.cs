@@ -108,6 +108,7 @@ namespace CSharpOutline2019
 
         public ViewHostingControl ToHoverControl()
         {
+            //必须传入方法，不能提前生成buffer 不然会出现异常 System.InvalidOperationException: Inconsistent length calculation in projection snapshot  投影快照中的长度计算不一致
             var viewHostingControl = new ViewHostingControl((tb) => CreateTextView(EditorFactory, tb), GetHoverBuffer);
             return viewHostingControl;
         }

@@ -222,7 +222,3 @@ namespace CSharpOutline2019
         }
     }
 }
-
-
-//异步 https://github.com/EbenZhang/VbSharpOutliner/blob/09a0dee2d51cf094df8975080316302729f74dd9/VBSharpOutliner/OutliningTagger.cs
-//提取循环
