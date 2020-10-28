@@ -260,7 +260,7 @@ namespace CSharpOutline2019
                     if (item.SpanIndex > 0)
                     {
                         var previousSpan = ClassificationSpans[item.SpanIndex - 1];
-                        if (item.StartLine.LineNumber == previousSpan.Span.End.GetContainingLine().LineNumber + 1)
+                        if (!ClassificationName.IsProcessor(previousSpan.ClassificationType.Classification) && item.StartLine.LineNumber == previousSpan.Span.End.GetContainingLine().LineNumber + 1)
                         {
                             item.StartsFromLastLine = true;
                             item.StartPoint = previousSpan.Span.End;
