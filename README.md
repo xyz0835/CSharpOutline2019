@@ -4,7 +4,7 @@
 
 An extension for Visual Studio 2017/2019 to add curly braces outlining for C# editor, **especially those braces in the catch & finally block**. It's better to disable built-in outlining.
 
->Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck `Show outlining of declaration level constructs` and `Show outlining of code level constructs` and `Show outlining of comments and preprocessor regions`
+>Tools-Option-Text Editor-C#-Advanced-Outlining, uncheck  `Show outlining of code level constructs`
 
 ![uncheck](uncheck-en.png)
 
@@ -76,7 +76,7 @@ Visual Studio 2017/2019 扩展，主要功能如下
 
 ### 这几项功能和VS自带的功能有所重叠，所以需要取消勾选以下选项
 
->工具-选项-文本编辑器-C#-高级-大纲，取消勾选 `显示声明级别构造的大纲`, `显示代码级别构造的大纲`, `显示注释和预处理区域的大纲`
+>工具-选项-文本编辑器-C#-高级-大纲，取消勾选 `显示代码级别构造的大纲`
 
 ![uncheck](uncheck-cn.png)
 
