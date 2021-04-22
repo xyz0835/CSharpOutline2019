@@ -74,10 +74,47 @@ namespace CSharpOutline2019
                     index = spanText.IndexOf("{");
                     if (index > -1)
                     {
-                        var startPoint = span.Span.Start;
-                        var blockRegion = new CodeRegin(startPoint + index, CodeRegionType.Block, EditorFactory, BufferFactory);
-                        blockRegion.SpanIndex = spanIndex;
-                        Regions.Add(blockRegion);
+                        #region 只处理代码级别的花括号，声明级别的由VS处理。为了能用 '折叠到定义' 功能
+
+                        bool isNewBlock = false;
+                        for (int checkIndex = spanIndex - 1; checkIndex > 0; checkIndex--)
+                        {
+                            //var checkText = ClassificationSpans[checkIndex].Span.GetText();
+                            //if (checkText == "catch" || checkText == "finally")
+                            //{
+                            //    isNewBlock = true;
+                            //    break;
+                            //}
+
+                            //if (checkText.Contains("}"))
+                            //{
+                            //    isNewBlock = false;
+                            //    break;
+                            //}
+
+                            if (ClassificationName.IsDeclaration(ClassificationSpans[checkIndex].ClassificationType.Classification))
+                            {
+                                isNewBlock = false;
+                                break;
+                            }
+
+                            var checkText = ClassificationSpans[checkIndex].Span.GetText();
+                            if (checkText.Contains("{"))
+                            {
+                                isNewBlock = true;
+                                break;
+                            }
+                        }
+
+                        #endregion
+
+                        if (isNewBlock)
+                        {
+                            var startPoint = span.Span.Start;
+                            var blockRegion = new CodeRegin(startPoint + index, CodeRegionType.Block, EditorFactory, BufferFactory);
+                            blockRegion.SpanIndex = spanIndex;
+                            Regions.Add(blockRegion);
+                        }
                     }
                 }
                 else if (ClassificationName.IsProcessor(span.ClassificationType.Classification))

@@ -88,7 +88,7 @@
         /// <returns></returns>
         public static bool IsComment(string classfication)
         {
-            return classfication == Comment || classfication.StartsWith("xml doc comment"); 
+            return classfication == Comment || classfication.StartsWith("xml doc comment");
         }
 
         /// <summary>
@@ -104,6 +104,16 @@
         public static bool IsKeyword(string classfication)
         {
             return classfication.StartsWith("keyword");
+        }
+
+        /// <summary>
+        /// 是声明级别的代码
+        /// </summary>
+        /// <param name="classfication"></param>
+        /// <returns></returns>
+        public static bool IsDeclaration(string classfication)
+        {
+            return classfication == "namespace name" || classfication == "class name" || classfication == "method name";
         }
     }
 }
