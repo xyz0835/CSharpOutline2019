@@ -113,7 +113,12 @@
         /// <returns></returns>
         public static bool IsDeclaration(string classfication)
         {
-            return classfication == "namespace name" || classfication == "class name" || classfication == "method name";
+            //class name
+            //class name - static symbol - (TRANSIENT) 静态构造函数
+            //method name
+            //method name - static symbol - (TRANSIENT) 静态方法
+
+            return classfication == "namespace name" || classfication == "property name"|| classfication == "enum name" || classfication == "struct name" || classfication.Contains("class name") || classfication.Contains("method name");
         }
     }
 }

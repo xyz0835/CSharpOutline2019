@@ -30,6 +30,16 @@ namespace CSharpOutline2019
 
         public List<CodeRegin> FindAll()
         {
+#if DEBUG
+            var sb = new StringBuilder();
+            foreach (var span in ClassificationSpans)
+            {
+                sb.Append($"{span.ClassificationType.Classification} {span.Span.GetText()}{Environment.NewLine}");
+            }
+            var spanAllText = sb.ToString();
+#endif
+
+
             List<CodeRegin> Regions = new List<CodeRegin>();
             for (int spanIndex = 0; spanIndex < ClassificationSpans.Count; spanIndex++)
             {
@@ -208,44 +218,50 @@ namespace CSharpOutline2019
                 else if (ClassificationName.IsKeyword(span.ClassificationType.Classification))
                 {
                     var spanText = span.Span.GetText();
-                    if (spanText == "using")
-                    {
-                        var region = new CodeRegin(span.Span.Start, CodeRegionType.Using, EditorFactory, BufferFactory);
-                        region.EndPoint = span.Span.Start.GetContainingLine().End;
-                        int index = spanIndex;
-                        int lineNo = span.Span.Start.GetContainingLine().LineNumber;
 
-                        while (index < ClassificationSpans.Count)
-                        {
-                            index++;
-                            var spanItem = ClassificationSpans[index];
-                            var line = spanItem.Span.Start.GetContainingLine();
-                            if (line.LineNumber == lineNo)
-                                continue;
+                    #region 由于要启用VS自带的格式化（便于折叠到定义），这里就不再处理using
 
-                            lineNo = line.LineNumber;
-                            bool isUsing = false;
-                            if (ClassificationName.IsKeyword(spanItem.ClassificationType.Classification))
-                            {
-                                spanText = spanItem.Span.GetText();
-                                if (spanText == "using")
-                                {
-                                    region.EndPoint = line.End;
-                                    //if (line.End.Position + 1 < Snapshot.Length)
-                                    //    region.EndPoint = line.End + 1;
-                                    isUsing = true;
-                                }
-                            }
+                    //if (spanText == "using")
+                    //{
+                    //    var region = new CodeRegin(span.Span.Start, CodeRegionType.Using, EditorFactory, BufferFactory);
+                    //    region.EndPoint = span.Span.Start.GetContainingLine().End;
+                    //    int index = spanIndex;
+                    //    int lineNo = span.Span.Start.GetContainingLine().LineNumber;
 
-                            if (!isUsing)
-                            {
-                                region.Complete = true;
-                                spanIndex = index - 1;
-                                break;
-                            }
-                        }
-                        Regions.Add(region);
-                    }
+                    //    while (index < ClassificationSpans.Count)
+                    //    {
+                    //        index++;
+                    //        var spanItem = ClassificationSpans[index];
+                    //        var line = spanItem.Span.Start.GetContainingLine();
+                    //        if (line.LineNumber == lineNo)
+                    //            continue;
+
+                    //        lineNo = line.LineNumber;
+                    //        bool isUsing = false;
+                    //        if (ClassificationName.IsKeyword(spanItem.ClassificationType.Classification))
+                    //        {
+                    //            spanText = spanItem.Span.GetText();
+                    //            if (spanText == "using")
+                    //            {
+                    //                region.EndPoint = line.End;
+                    //                //if (line.End.Position + 1 < Snapshot.Length)
+                    //                //    region.EndPoint = line.End + 1;
+                    //                isUsing = true;
+                    //            }
+                    //        }
+
+                    //        if (!isUsing)
+                    //        {
+                    //            region.Complete = true;
+                    //            spanIndex = index - 1;
+                    //            break;
+                    //        }
+                    //    }
+                    //    Regions.Add(region);
+                    //}
+
+                    #endregion
+
 #if !VS2017
                     if (span.ClassificationType.Classification == ClassificationName.KeywordControl)
 #endif
