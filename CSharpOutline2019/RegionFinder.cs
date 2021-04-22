@@ -130,7 +130,7 @@ namespace CSharpOutline2019
                 else if (ClassificationName.IsProcessor(span.ClassificationType.Classification))
                 {
                     var spanText = span.Span.GetText();
-                    if (spanText == "#region" || spanText == "#if" || spanText == "#else")
+                    if (spanText == "#if" || spanText == "#else") //spanText == "#region" ||
                     {
                         var region = new CodeRegin(span.Span.Start, CodeRegionType.ProProcessor, EditorFactory, BufferFactory);
                         Regions.Add(region);
@@ -147,16 +147,16 @@ namespace CSharpOutline2019
                     }
                     else
                     {
-                        if (spanText == "#endregion")
-                        {
-                            var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#region"));
-                            if (region != null)
-                            {
-                                region.EndPoint = span.Span.Start.GetContainingLine().End;
-                                region.Complete = true;
-                            }
-                        }
-                        else if (spanText == "#endif")
+                        //if (spanText == "#endregion")
+                        //{
+                        //    var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.ProProcessor && n.StartLine.GetText().Trim().StartsWith("#region"));
+                        //    if (region != null)
+                        //    {
+                        //        region.EndPoint = span.Span.Start.GetContainingLine().End;
+                        //        region.Complete = true;
+                        //    }
+                        //} else
+                        if (spanText == "#endif")
                         {
                             var region = Regions.LastOrDefault(n => !n.Complete && n.RegionType == CodeRegionType.ProProcessor && (n.StartLine.GetText().Trim().StartsWith("#if") || n.StartLine.GetText().Trim().StartsWith("#else")));
                             if (region != null)
