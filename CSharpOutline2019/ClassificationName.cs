@@ -88,7 +88,8 @@
         /// <returns></returns>
         public static bool IsComment(string classfication)
         {
-            return classfication == Comment || classfication.StartsWith("xml doc comment");
+            return classfication == Comment;
+            //return classfication == Comment || classfication.StartsWith("xml doc comment");
         }
 
         /// <summary>
@@ -118,7 +119,7 @@
             //method name
             //method name - static symbol - (TRANSIENT) 静态方法
 
-            return classfication == "namespace name" || classfication == "property name"|| classfication == "enum name" || classfication == "struct name" || classfication.Contains("class name") || classfication.Contains("method name");
+            return classfication == "namespace name" || classfication == "property name" || classfication == "enum name" || classfication == "struct name" || classfication == "interface name" || classfication.Contains("class name") || classfication.Contains("method name");
         }
     }
 }
