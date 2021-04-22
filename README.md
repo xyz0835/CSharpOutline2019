@@ -66,10 +66,6 @@ Visual Studio 2017/2019 扩展，主要功能如下
 
 ![preprocessor](preprocessor.png)
 
-- 折叠 `using`
-
-![using](using.png)
-
 - 折叠 `switch` 里的 `case` & `default`
 
 ![case](case.png)
