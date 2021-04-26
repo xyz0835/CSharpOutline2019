@@ -87,6 +87,7 @@ namespace CSharpOutline2019
                         #region 只处理代码级别的花括号，声明级别的由VS处理。为了能用 '折叠到定义' 功能
 
                         bool isNewBlock = false;
+                        //往上查找
                         for (int checkIndex = spanIndex - 1; checkIndex > 0; checkIndex--)
                         {
                             //var checkText = ClassificationSpans[checkIndex].Span.GetText();
@@ -108,11 +109,14 @@ namespace CSharpOutline2019
                                 break;
                             }
 
-                            var checkText = ClassificationSpans[checkIndex].Span.GetText();
-                            if (checkText.Contains("{") || checkText.Contains("}"))
+                            if (ClassificationSpans[checkIndex].ClassificationType.Classification == ClassificationName.Punctuation)
                             {
-                                isNewBlock = true;
-                                break;
+                                var checkText = ClassificationSpans[checkIndex].Span.GetText();
+                                if (checkText.Contains("{") || checkText.Contains("}"))
+                                {
+                                    isNewBlock = true;
+                                    break;
+                                }
                             }
                         }
 
