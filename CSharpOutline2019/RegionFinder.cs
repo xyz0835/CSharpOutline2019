@@ -109,7 +109,7 @@ namespace CSharpOutline2019
                             }
 
                             var checkText = ClassificationSpans[checkIndex].Span.GetText();
-                            if (checkText.Contains("{"))
+                            if (checkText.Contains("{") || checkText.Contains("}"))
                             {
                                 isNewBlock = true;
                                 break;
